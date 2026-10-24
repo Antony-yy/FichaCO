@@ -101,3 +101,4 @@ const ACESSORIOS = [
   { nome: 'BÃºssola Eterna',           tipo: 'AcessÃ³rio â€” BÃºssola',    raridade: 'Incomum', recarga: 'Descanso mÃ©dio+', carga: 2, acao: 'BÃ´nus',   desc: 'BÃºssola de bronze antigo. Aponta para o local que o usuÃ¡rio mais deseja encontrar no momento, desde que no mesmo plano e a poucos quilÃ´metros.' },
 ];
 
+

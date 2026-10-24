@@ -18,6 +18,49 @@ const estado = {
   nomePersonagem: ''
 };
 
+(function () {
+  const isFichaKey = key => typeof key === 'string' && key.startsWith('fragmentados_');
+
+  const originalSetItem = Storage.prototype.setItem;
+  const originalGetItem = Storage.prototype.getItem;
+  const originalRemoveItem = Storage.prototype.removeItem;
+
+  Storage.prototype.setItem = function (key, value) {
+    const texto = String(value);
+    if (isFichaKey(key)) {
+      try {
+        originalSetItem.call(localStorage, key, texto);
+      } catch (e) {
+        console.warn('Não foi possível persistir a ficha no localStorage:', e);
+      }
+    }
+    return originalSetItem.call(this, key, texto);
+  };
+
+  Storage.prototype.getItem = function (key) {
+    if (isFichaKey(key) && this === window.sessionStorage) {
+      try {
+        const salvoLocal = originalGetItem.call(localStorage, key);
+        if (salvoLocal !== null) return salvoLocal;
+      } catch (e) {
+        console.warn('Não foi possível ler a ficha do localStorage:', e);
+      }
+    }
+    return originalGetItem.call(this, key);
+  };
+
+  Storage.prototype.removeItem = function (key) {
+    if (isFichaKey(key)) {
+      try {
+        originalRemoveItem.call(localStorage, key);
+      } catch (e) {
+        console.warn('Não foi possível remover a ficha do localStorage:', e);
+      }
+    }
+    return originalRemoveItem.call(this, key);
+  };
+})();
+
 function salvarEstado() {
   sessionStorage.setItem('fragmentados_estado', JSON.stringify(estado));
 }

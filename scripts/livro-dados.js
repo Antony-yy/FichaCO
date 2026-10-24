@@ -486,3 +486,4 @@ const LIVRO_ARMAS_EXTRA = [
   { titulo: 'Tridente', texto: `<strong>Alcance:</strong> 1,5m Â· <strong>Tipo:</strong> Perfurante Â· <strong>Dano:</strong> 1d8 + For Â· <strong>CrÃ­tico:</strong> 19-20/2d Â· <strong>Peso:</strong> Pesada Â· <strong>Uso:</strong> 2 MÃ£os Â· <strong>Modo:</strong> CaC` },
 ];
 
+

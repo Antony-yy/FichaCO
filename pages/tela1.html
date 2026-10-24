@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fragmentados — Escolha sua Classe</title>
-<link rel="icon" href="Imagens/LogoT.png" type="image/png">
-<link rel="stylesheet" href="global.css">
-<link rel="stylesheet" href="tela1.css">
+<link rel="icon" href="../assets/images/LogoT.png" type="image/png">
+<link rel="stylesheet" href="../styles/global.css">
+<link rel="stylesheet" href="../styles/tela1.css">
 </head>
 <body>
 
 <div id="navLogo" onclick="toggleMenu()">
-  <img src="Imagens/LogoT.png" alt="Primórdios">
+  <img src="../assets/images/LogoT.png" alt="Primórdios">
   <div id="navMenu">
     <div class="nav-item" onclick="Sons.nav();window.location.href='inventario.html'"><span class="nav-item-icone">⚔</span> Inventário</div>
     <div class="nav-item" onclick="Sons.nav();novoPersonagem()"><span class="nav-item-icone">✦</span> Novo Personagem</div>
@@ -77,9 +77,9 @@
   </div>
 </div>
 
-<script src="estado.js"></script>
-<script src="audio.js"></script>
-<script src="sons.js"></script>
+<script src="../scripts/estado.js"></script>
+<script src="../scripts/audio.js"></script>
+<script src="../scripts/sons.js"></script>
 <script>
   const logoImg = document.querySelector('#navLogo img');
   logoImg.classList.add('logo-entrada');
