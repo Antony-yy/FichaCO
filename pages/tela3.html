@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fragmentados â€” Equipamentos</title>
+<title>Fragmentados — Equipamentos</title>
 <link rel="icon" href="../assets/images/LogoT.png" type="image/png">
 <link rel="stylesheet" href="../styles/global.css">
 <link rel="stylesheet" href="../styles/tela3.css">
@@ -12,7 +12,7 @@
 
 <section class="tela">
   <h1 class="titulo-tela">Equipamentos</h1>
-  <p class="subtitulo-tela">Escolha sua arma, armadura e acessÃ³rio</p>
+  <p class="subtitulo-tela">Escolha sua arma, armadura e acessório</p>
 
   <div class="t3-layout">
 
@@ -21,7 +21,7 @@
       <div class="t3-abas">
         <button class="t3-aba ativo" onclick="mudarAba('armas', this)">Armas</button>
         <button class="t3-aba" onclick="mudarAba('armaduras', this)">Armaduras</button>
-        <button class="t3-aba" onclick="mudarAba('acessorios', this)">AcessÃ³rios</button>
+        <button class="t3-aba" onclick="mudarAba('acessorios', this)">Acessórios</button>
       </div>
       <div class="t3-busca-wrap">
         <input class="t3-busca" type="text" placeholder="Buscar..." oninput="filtrarLista(this.value)" autocomplete="off" id="campoBusca">
@@ -35,8 +35,8 @@
   </div>
 
   <div style="display:flex;gap:16px;margin-top:40px;">
-    <button class="btn-avancar habilitado" onclick="Sons.back();window.location.href='tela2.html'">â† Voltar</button>
-    <button class="btn-avancar habilitado" onclick="Sons.confirm();iniciarLoading()">Finalizar â†’</button>
+    <button class="btn-avancar habilitado" onclick="Sons.back();window.location.href='tela2.html'">← Voltar</button>
+    <button class="btn-avancar habilitado" onclick="Sons.confirm();iniciarLoading()">Finalizar →</button>
   </div>
 </section>
 
@@ -82,18 +82,18 @@
                     : abaAtiva === 'armaduras' ? estado.armadura
                     : estado.acessorio;
 
-    // agrupa por categoria (tudo antes do ' â€” ')
+    // agrupa por categoria (tudo antes do ' — ')
     const grupos = {};
     items.forEach(item => {
       if (buscaAtual && !item.nome.toLowerCase().includes(buscaAtual) && !(item.tipo||'').toLowerCase().includes(buscaAtual) && !(item.dano||'').toLowerCase().includes(buscaAtual) && !(item.desc||'').toLowerCase().includes(buscaAtual)) return;
-      const cat = item.tipo.split(' â€” ')[0];
+      const cat = item.tipo.split(' — ')[0];
       if (!grupos[cat]) grupos[cat] = [];
       grupos[cat].push(item);
     });
 
     const cats = Object.keys(grupos);
     if (!cats.length) {
-      lista.innerHTML = '<div class="t3-vazio">âž³ Nenhum resultado</div>';
+      lista.innerHTML = '<div class="t3-vazio">➳ Nenhum resultado</div>';
       return;
     }
 
@@ -106,7 +106,7 @@
         const d = document.createElement('div');
         d.className = 'item-linha' + (estadoSel === item.nome ? ' ativo' : '');
         // extrai dano curto
-        const danoShort = item.dano ? item.dano.split(' Â·')[0] : (item.dano || '');
+        const danoShort = item.dano ? item.dano.split(' ·')[0] : (item.dano || '');
         d.innerHTML = `<span>${item.nome}</span><span class="item-linha-dano">${danoShort}</span>`;
         d.onclick = () => {
           Sons.click();
@@ -128,15 +128,15 @@
     const acess    = estado.acessorio ? ACESSORIOS.find(a => a.nome === estado.acessorio) : null;
 
     const cardHtml = (label, i) => {
-      if (!i) return `<div class="sel-card vazio"><div class="sel-label">${label}</div><div class="sel-vazio">â€” nenhum selecionado â€”</div></div>`;
-      const ativo = (label==='Arma' && abaAtiva==='armas') || (label==='Armadura' && abaAtiva==='armaduras') || (label==='AcessÃ³rio' && abaAtiva==='acessorios');
-      const extra = i.raridade ? `<div class="sel-extra">${i.raridade}${i.recarga?' Â· '+i.recarga:''}${i.acao?' Â· '+i.acao:''}</div>` : '';
-      const dano  = i.dano ? `<div class="sel-dano">âš” ${i.dano}</div>` : '';
+      if (!i) return `<div class="sel-card vazio"><div class="sel-label">${label}</div><div class="sel-vazio">— nenhum selecionado —</div></div>`;
+      const ativo = (label==='Arma' && abaAtiva==='armas') || (label==='Armadura' && abaAtiva==='armaduras') || (label==='Acessório' && abaAtiva==='acessorios');
+      const extra = i.raridade ? `<div class="sel-extra">${i.raridade}${i.recarga?' · '+i.recarga:''}${i.acao?' · '+i.acao:''}</div>` : '';
+      const dano  = i.dano ? `<div class="sel-dano">⚔ ${i.dano}</div>` : '';
       return `<div class="sel-card${ativo?' ativo':''}"><div class="sel-label">${label}</div><div class="sel-nome">${i.nome}</div><div class="sel-tipo">${i.tipo}</div>${extra}${dano}<div class="sel-desc">${i.desc}</div></div>`;
     };
 
     document.getElementById('t3Detalhe').innerHTML =
-      cardHtml('Arma', arma) + cardHtml('Armadura', armadura) + cardHtml('AcessÃ³rio', acess);
+      cardHtml('Arma', arma) + cardHtml('Armadura', armadura) + cardHtml('Acessório', acess);
   }
 
   function iniciarLoading() {

@@ -5,7 +5,7 @@ const MUSICAS = [
   { nome: 'Brisa Em Waterfall', arquivo: '../assets/audio/BrisaEmWaterfall.mp3' },
   { nome: 'Gustas',             arquivo: '../assets/audio/Gustas.mp3' },
   { nome: 'O Monarca',          arquivo: '../assets/audio/OMonarca.mp3' },
-  { nome: 'Minha DimensÃ£o',     arquivo: '../assets/audio/MinhaDImensÃ£o.mp3' },
+  { nome: 'Minha Dimensão',     arquivo: '../assets/audio/MinhaDImensão.mp3' },
   { nome: 'O Rei',              arquivo: '../assets/audio/ORei.mp3' },
 ];
 
@@ -20,13 +20,13 @@ const MUSICAS = [
   const audio  = new Audio();
   audio.volume = volume;
 
-  // Salva posiÃ§Ã£o a cada segundo
+  // Salva posição a cada segundo
   setInterval(() => {
     if (!audio.paused && audio.duration)
       sessionStorage.setItem('primordios_audio_pos', audio.currentTime);
   }, 1000);
 
-  // Salva posiÃ§Ã£o antes de sair da pÃ¡gina
+  // Salva posição antes de sair da página
   window.addEventListener('beforeunload', () => {
     if (!audio.paused && audio.duration)
       sessionStorage.setItem('primordios_audio_pos', audio.currentTime);
@@ -53,7 +53,7 @@ const MUSICAS = [
     else tocar(idx);
   });
 
-  // Retoma da posiÃ§Ã£o salva se for a mesma mÃºsica
+  // Retoma da posição salva se for a mesma música
   const posSalva   = parseFloat(sessionStorage.getItem('primordios_audio_pos') || '0');
   const idxSalvo   = config.musicaIdx ?? 0;
 
@@ -70,7 +70,7 @@ const MUSICAS = [
     if (p) p.catch(() => document.addEventListener('click', iniciar));
   }, { once: true });
 
-  // Sincroniza com alteraÃ§Ãµes feitas em configuraÃ§Ãµes
+  // Sincroniza com alterações feitas em configurações
   window.addEventListener('storage', e => {
     if (e.key !== 'primordios_config') return;
     const c = JSON.parse(e.newValue || '{}');
