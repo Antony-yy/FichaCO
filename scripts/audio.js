@@ -1,12 +1,12 @@
-// ===== AUDIO.JS =====
+﻿// ===== AUDIO.JS =====
 const MUSICAS = [
-  { nome: 'Espera',             arquivo: 'audios/Espera.mp3' },
-  { nome: 'Na Minha Floresta',  arquivo: 'audios/NaMinhaFloresta.mp3' },
-  { nome: 'Brisa Em Waterfall', arquivo: 'audios/BrisaEmWaterfall.mp3' },
-  { nome: 'Gustas',             arquivo: 'audios/Gustas.mp3' },
-  { nome: 'O Monarca',          arquivo: 'audios/OMonarca.mp3' },
-  { nome: 'Minha Dimensão',     arquivo: 'audios/MinhaDImensão.mp3' },
-  { nome: 'O Rei',              arquivo: 'audios/ORei.mp3' },
+  { nome: 'Espera',             arquivo: '../assets/audio/Espera.mp3' },
+  { nome: 'Na Minha Floresta',  arquivo: '../assets/audio/NaMinhaFloresta.mp3' },
+  { nome: 'Brisa Em Waterfall', arquivo: '../assets/audio/BrisaEmWaterfall.mp3' },
+  { nome: 'Gustas',             arquivo: '../assets/audio/Gustas.mp3' },
+  { nome: 'O Monarca',          arquivo: '../assets/audio/OMonarca.mp3' },
+  { nome: 'Minha DimensÃ£o',     arquivo: '../assets/audio/MinhaDImensÃ£o.mp3' },
+  { nome: 'O Rei',              arquivo: '../assets/audio/ORei.mp3' },
 ];
 
 (function () {
@@ -20,13 +20,13 @@ const MUSICAS = [
   const audio  = new Audio();
   audio.volume = volume;
 
-  // Salva posição a cada segundo
+  // Salva posiÃ§Ã£o a cada segundo
   setInterval(() => {
     if (!audio.paused && audio.duration)
       sessionStorage.setItem('primordios_audio_pos', audio.currentTime);
   }, 1000);
 
-  // Salva posição antes de sair da página
+  // Salva posiÃ§Ã£o antes de sair da pÃ¡gina
   window.addEventListener('beforeunload', () => {
     if (!audio.paused && audio.duration)
       sessionStorage.setItem('primordios_audio_pos', audio.currentTime);
@@ -53,7 +53,7 @@ const MUSICAS = [
     else tocar(idx);
   });
 
-  // Retoma da posição salva se for a mesma música
+  // Retoma da posiÃ§Ã£o salva se for a mesma mÃºsica
   const posSalva   = parseFloat(sessionStorage.getItem('primordios_audio_pos') || '0');
   const idxSalvo   = config.musicaIdx ?? 0;
 
@@ -70,7 +70,7 @@ const MUSICAS = [
     if (p) p.catch(() => document.addEventListener('click', iniciar));
   }, { once: true });
 
-  // Sincroniza com alterações feitas em configurações
+  // Sincroniza com alteraÃ§Ãµes feitas em configuraÃ§Ãµes
   window.addEventListener('storage', e => {
     if (e.key !== 'primordios_config') return;
     const c = JSON.parse(e.newValue || '{}');
@@ -85,3 +85,4 @@ const MUSICAS = [
     }
   });
 })();
+

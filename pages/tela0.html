@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -83,6 +83,17 @@
     localStorage.setItem('primordios_usuarios', JSON.stringify(lista));
   }
 
+  // Já está logado neste navegador? Vai direto para os personagens.
+  (function () {
+    const logado = JSON.parse(localStorage.getItem('primordios_logado') || 'null');
+    if (!logado) return;
+    if (getUsuarios().some(u => u.usuario === logado.usuario)) {
+      window.location.replace('inventario.html');
+    } else {
+      localStorage.removeItem('primordios_logado');
+    }
+  })();
+
   function fazerLogin(e) {
     e.preventDefault();
     const usuario = document.getElementById('loginUsuario').value.trim();
@@ -97,7 +108,7 @@
 
     erroEl.textContent = '';
     Sons.success();
-    sessionStorage.setItem('primordios_logado', JSON.stringify({ usuario: encontrado.usuario }));
+    localStorage.setItem('primordios_logado', JSON.stringify({ usuario: encontrado.usuario }));
     iniciarTransicao();
   }
 

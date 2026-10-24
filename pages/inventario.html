@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -70,13 +70,13 @@
   });
 
   function sair() {
-    sessionStorage.removeItem('primordios_logado');
+    localStorage.removeItem('primordios_logado');
     window.location.href = 'tela0.html';
   }
 
   // ===== PERSONAGENS =====
   function getUsuarioLogado() {
-    const s = sessionStorage.getItem('primordios_logado');
+    const s = localStorage.getItem('primordios_logado');
     return s ? JSON.parse(s).usuario : null;
   }
 
@@ -136,15 +136,7 @@
     const p = personagens[idx];
     if (!p || !p.estadoCompleto || !p.estadoCompleto.classe) return;
 
-    sessionStorage.setItem('primordios_estado', JSON.stringify(p.estadoCompleto));
-    if (p.foto)  sessionStorage.setItem('fragmentados_foto', p.foto);  else sessionStorage.removeItem('fragmentados_foto');
-    if (p.desc)  sessionStorage.setItem('fragmentados_desc', p.desc);  else sessionStorage.removeItem('fragmentados_desc');
-    if (p.pvMax) sessionStorage.setItem('fragmentados_pvmax', p.pvMax);
-    if (p.peMax) sessionStorage.setItem('fragmentados_pemax', p.peMax);
-    if (p.pv)    sessionStorage.setItem('fragmentados_pv', p.pv);
-    if (p.pe)    sessionStorage.setItem('fragmentados_pe', p.pe);
-    if (p.ca)    sessionStorage.setItem('fragmentados_ca', p.ca);
-    if (p.xp)    sessionStorage.setItem('fragmentados_xp', p.xp);
+    restaurarDadosFicha(p);
 
     window.location.href = 'tela5.html';
   }

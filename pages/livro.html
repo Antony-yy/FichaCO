@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -81,7 +81,7 @@
     if (!document.getElementById('navLogo').contains(e.target))
       document.getElementById('navMenu').classList.remove('aberto');
   });
-  function sair() { sessionStorage.removeItem('primordios_logado'); window.location.href = 'tela0.html'; }
+  function sair() { localStorage.removeItem('primordios_logado'); window.location.href = 'tela0.html'; }
   function novoPersonagem() { sessionStorage.removeItem('primordios_estado'); window.location.href = 'tela1.html'; }
 
   // ===== DADOS DAS ABAS =====
@@ -884,7 +884,7 @@
 
   // ===== INIT =====
   window.addEventListener('load', () => {
-    const user = JSON.parse(sessionStorage.getItem('primordios_logado') || 'null');
+    const user = JSON.parse(localStorage.getItem('primordios_logado') || 'null');
     if (!user) { window.location.href = 'tela0.html'; return; }
     renderTermos('');
   });

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -245,7 +245,7 @@
       document.getElementById('navMenu').classList.remove('aberto');
   });
   function sair() {
-    sessionStorage.removeItem('primordios_logado');
+    localStorage.removeItem('primordios_logado');
     window.location.href = 'tela0.html';
   }
 
@@ -478,7 +478,7 @@
     const sucEl  = document.getElementById('senhaSucesso');
     erroEl.textContent = ''; sucEl.textContent = '';
 
-    const user    = JSON.parse(sessionStorage.getItem('primordios_logado') || 'null');
+    const user    = JSON.parse(localStorage.getItem('primordios_logado') || 'null');
     const usuarios = JSON.parse(localStorage.getItem('primordios_usuarios') || '[]');
     const idx     = usuarios.findIndex(u => u.usuario === user.usuario);
     if (idx === -1) { erroEl.textContent = 'Usuário não encontrado.'; return; }
@@ -501,13 +501,14 @@
     const senha   = document.getElementById('apagarSenha').value;
     const erroEl  = document.getElementById('apagarErro');
     erroEl.textContent = '';
-    const user    = JSON.parse(sessionStorage.getItem('primordios_logado') || 'null');
+    const user    = JSON.parse(localStorage.getItem('primordios_logado') || 'null');
     const usuarios = JSON.parse(localStorage.getItem('primordios_usuarios') || '[]');
     const idx     = usuarios.findIndex(u => u.usuario === user.usuario);
     if (idx === -1 || usuarios[idx].senha !== senha) { erroEl.textContent = 'Senha incorreta.'; return; }
     usuarios.splice(idx, 1);
     localStorage.setItem('primordios_usuarios', JSON.stringify(usuarios));
     localStorage.removeItem('primordios_personagens_' + user.usuario);
+    localStorage.removeItem('primordios_logado');
     sessionStorage.clear();
     window.location.href = 'tela0.html';
   }
@@ -521,7 +522,7 @@
 
   // ===== INIT =====
   window.addEventListener('load', () => {
-    const user = JSON.parse(sessionStorage.getItem('primordios_logado') || 'null');
+    const user = JSON.parse(localStorage.getItem('primordios_logado') || 'null');
     if (!user) { window.location.href = 'tela0.html'; return; }
     document.getElementById('cfgUsuario').textContent = user.usuario;
     carregarConfig();

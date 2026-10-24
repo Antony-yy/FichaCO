@@ -1,4 +1,4 @@
-// ===== SONS.JS =====
+﻿// ===== SONS.JS =====
 const Sons = (() => {
   let ctx = null;
 
@@ -42,7 +42,7 @@ const Sons = (() => {
     });
   }
 
-  // Confirmar / selecionar — acorde ascendente
+  // Confirmar / selecionar â€” acorde ascendente
   function confirm() {
     tocar(ctx => {
       [[520, 0], [660, 0.08], [820, 0.16]].forEach(([freq, t]) => {
@@ -59,7 +59,7 @@ const Sons = (() => {
     });
   }
 
-  // Voltar / fechar — nota descendente
+  // Voltar / fechar â€” nota descendente
   function back() {
     tocar(ctx => {
       const o = ctx.createOscillator();
@@ -74,7 +74,7 @@ const Sons = (() => {
     });
   }
 
-  // Erro — buzzer grave duplo
+  // Erro â€” buzzer grave duplo
   function error() {
     tocar(ctx => {
       [0, 0.13].forEach(t => {
@@ -91,7 +91,7 @@ const Sons = (() => {
     });
   }
 
-  // Sucesso — fanfarra ascendente
+  // Sucesso â€” fanfarra ascendente
   function success() {
     tocar(ctx => {
       [[400,0],[500,0.1],[630,0.2],[840,0.3]].forEach(([freq, t]) => {
@@ -108,7 +108,7 @@ const Sons = (() => {
     });
   }
 
-  // Delete — pancada grave
+  // Delete â€” pancada grave
   function del() {
     tocar(ctx => {
       const o = ctx.createOscillator();
@@ -123,7 +123,7 @@ const Sons = (() => {
     });
   }
 
-  // Toggle (ligar/desligar) — click metálico
+  // Toggle (ligar/desligar) â€” click metÃ¡lico
   function toggle() {
     tocar(ctx => {
       const o = ctx.createOscillator();
@@ -138,7 +138,7 @@ const Sons = (() => {
     });
   }
 
-  // Navegar entre páginas — whoosh suave
+  // Navegar entre pÃ¡ginas â€” whoosh suave
   function nav() {
     tocar(ctx => {
       const o = ctx.createOscillator();
@@ -155,3 +155,4 @@ const Sons = (() => {
 
   return { click, hover, confirm, back, error, success, del, toggle, nav };
 })();
+

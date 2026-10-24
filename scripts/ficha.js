@@ -1,7 +1,7 @@
-// ===== FICHA.JS =====
+﻿// ===== FICHA.JS =====
 
 function sincronizarPersonagem() {
-  const user = JSON.parse(sessionStorage.getItem('primordios_logado') || 'null');
+  const user = JSON.parse(localStorage.getItem('primordios_logado') || 'null');
   if (!user) return;
   const lista = JSON.parse(localStorage.getItem('primordios_personagens_' + user.usuario) || '[]');
   const idx = lista.findIndex(p => p.nomePersonagem === estado.nomePersonagem);
@@ -17,10 +17,28 @@ function sincronizarPersonagem() {
     pe:      sessionStorage.getItem('fragmentados_pe'),
     ca:      sessionStorage.getItem('fragmentados_ca'),
     xp:      sessionStorage.getItem('fragmentados_xp'),
+    dados:   coletarDadosFicha(), // inventário, peso, checks, PCE...
     estadoCompleto: { ...estado }
   });
-  localStorage.setItem('primordios_personagens_' + user.usuario, JSON.stringify(lista));
+  gravarPersonagens(user.usuario, lista);
 }
+
+// Para campos digitados letra por letra (inventário): salva 0,4s depois da última tecla
+let _timerSync = null;
+function agendarSync() {
+  clearTimeout(_timerSync);
+  _timerSync = setTimeout(sincronizarPersonagem, 400);
+}
+
+// Garante o salvamento ao fechar a aba/navegador, recarregar ou sair da página
+function _salvarAoSair() {
+  clearTimeout(_timerSync);
+  sincronizarPersonagem();
+}
+window.addEventListener('pagehide', _salvarAoSair);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') _salvarAoSair();
+});
 
 const XP_TABLE = [0,300,500,700,900,1100,1300,1500,1700,1900,2100,2300,2500,2700,2900,3100,3300,3500,3700,4000,0];
 
@@ -248,6 +266,7 @@ function toggleConstCheck(cn, idx) {
   const atual  = checks[cn] || 0;
   checks[cn]   = idx < atual ? idx : idx + 1;
   sessionStorage.setItem('fragmentados_const_checks', JSON.stringify(checks));
+  agendarSync();
   const novo = checks[cn];
   // atualiza badge na ficha (se estiver visível)
   const fichaEl = document.getElementById('ficha-const-' + cn);
@@ -394,7 +413,31 @@ function carregarFoto(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => { sessionStorage.setItem('fragmentados_foto', e.target.result); renderFicha(); sincronizarPersonagem(); };
+  reader.onload = e => {
+    // Reduz a foto antes de guardar, senão ela estoura o limite de espaço do navegador
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 500;
+      const escala = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.max(1, Math.round(img.width  * escala));
+      canvas.height = Math.max(1, Math.round(img.height * escala));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = file.type === 'image/jpeg'
+        ? canvas.toDataURL('image/jpeg', 0.85)
+        : canvas.toDataURL('image/png');
+      try {
+        sessionStorage.setItem('fragmentados_foto', dataUrl);
+      } catch (err) {
+        alert('A foto é grande demais para salvar. Tente uma imagem menor.');
+        return;
+      }
+      renderFicha();
+      sincronizarPersonagem();
+    };
+    img.onerror = () => alert('Não consegui abrir essa imagem.');
+    img.src = e.target.result;
+  };
   reader.readAsDataURL(file);
 }
 
@@ -422,6 +465,7 @@ function adicionarItem() {
   sessionStorage.setItem('fragmentados_inventario', JSON.stringify(itens));
   adicionarLinhaInventario('', 1, 0, itens.length - 1);
   atualizarPeso();
+  agendarSync();
 }
 
 function adicionarLinhaInventario(nome, qtd, peso, idx) {
@@ -442,6 +486,7 @@ function salvarItemInventario(idx, campo, valor) {
   if (!itens[idx]) return;
   itens[idx][campo] = campo === 'nome' ? valor : parseFloat(valor) || 0;
   sessionStorage.setItem('fragmentados_inventario', JSON.stringify(itens));
+  agendarSync();
 }
 
 function removerItemInventario(idx) {
@@ -449,6 +494,7 @@ function removerItemInventario(idx) {
   itens.splice(idx, 1);
   sessionStorage.setItem('fragmentados_inventario', JSON.stringify(itens));
   carregarInventario();
+  agendarSync();
 }
 
 function atualizarPeso() {
@@ -460,7 +506,7 @@ function atualizarPeso() {
   const max = parseFloat(maxEl?.value) || 0;
   el.textContent = total.toFixed(1);
   el.style.color = max && total > max ? '#ff4444' : '#c9a84c';
-  if (maxEl?.value) sessionStorage.setItem('fragmentados_pesomax', maxEl.value);
+  if (maxEl?.value) { sessionStorage.setItem('fragmentados_pesomax', maxEl.value); agendarSync(); }
 }
 
 // ===== RENDER FICHA =====

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -356,7 +356,7 @@
   });
 
   function sair() {
-    sessionStorage.removeItem('primordios_logado');
+    localStorage.removeItem('primordios_logado');
     window.location.href = 'tela0.html';
   }
 
@@ -377,7 +377,7 @@
   });
 
   function salvarPersonagem() {
-    const user = JSON.parse(sessionStorage.getItem('primordios_logado') || 'null');
+    const user = JSON.parse(localStorage.getItem('primordios_logado') || 'null');
     if (!user) return;
     if (!estado.nomePersonagem || !estado.classe) return;
     const lista = JSON.parse(localStorage.getItem('primordios_personagens_' + user.usuario) || '[]');
@@ -394,12 +394,13 @@
       pe:    sessionStorage.getItem('fragmentados_pe'),
       ca:    sessionStorage.getItem('fragmentados_ca'),
       xp:    sessionStorage.getItem('fragmentados_xp'),
+      dados: coletarDadosFicha(),
       estadoCompleto: { ...estado }
     };
     const existente = lista.findIndex(p => p.nomePersonagem === novo.nomePersonagem);
     if (existente !== -1) lista[existente] = novo;
     else lista.push(novo);
-    localStorage.setItem('primordios_personagens_' + user.usuario, JSON.stringify(lista));
+    gravarPersonagens(user.usuario, lista);
   }
 </script>
 </body>

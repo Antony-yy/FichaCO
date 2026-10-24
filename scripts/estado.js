@@ -1,4 +1,4 @@
-// ===== ESTADO GLOBAL =====
+﻿// ===== ESTADO GLOBAL =====
 const estado = {
   personagem: null,
   classe: null,
@@ -32,6 +32,62 @@ function carregarEstadoBase() {
   if (!estado.artesDaEspada) estado.artesDaEspada = [];
   if (!estado.caminhoEspada) estado.caminhoEspada = [];
   return true;
+}
+
+// ===== SALVAMENTO PERMANENTE DA FICHA =====
+// A ficha que está aberta fica no sessionStorage (some ao fechar o navegador).
+// Por isso tudo é copiado para o personagem salvo no localStorage (que NÃO some)
+// e devolvido para o sessionStorage quando a ficha é aberta de novo.
+const CHAVES_FICHA = [
+  'fragmentados_pvmax', 'fragmentados_pemax',
+  'fragmentados_pv', 'fragmentados_pe',
+  'fragmentados_ca', 'fragmentados_xp', 'fragmentados_pce',
+  'fragmentados_pesomax', 'fragmentados_inventario', 'fragmentados_const_checks'
+];
+
+// Junta tudo da ficha aberta (inventário, peso, checks, PV/PE/CA/XP...) num objeto só
+function coletarDadosFicha() {
+  const dados = {};
+  CHAVES_FICHA.forEach(k => {
+    const v = sessionStorage.getItem(k);
+    if (v !== null) dados[k] = v;
+  });
+  return dados;
+}
+
+// Devolve um personagem salvo para a "ficha aberta" (apaga antes o que sobrou de outro personagem)
+function restaurarDadosFicha(p) {
+  const guardar = (k, v) => {
+    try { sessionStorage.setItem(k, v); } catch (e) { console.warn('Não consegui carregar', k, e); }
+  };
+  [...CHAVES_FICHA, 'fragmentados_foto', 'fragmentados_desc'].forEach(k => sessionStorage.removeItem(k));
+  // personagens salvos antes desta atualização só têm os campos antigos
+  const dados = p.dados || {
+    fragmentados_pvmax: p.pvMax, fragmentados_pemax: p.peMax,
+    fragmentados_pv: p.pv,       fragmentados_pe: p.pe,
+    fragmentados_ca: p.ca,       fragmentados_xp: p.xp
+  };
+  Object.entries(dados).forEach(([k, v]) => {
+    if (v !== null && v !== undefined && v !== '') guardar(k, v);
+  });
+  if (p.foto) guardar('fragmentados_foto', p.foto);
+  if (p.desc) guardar('fragmentados_desc', p.desc);
+  guardar('fragmentados_estado', JSON.stringify(p.estadoCompleto));
+}
+
+// Grava a lista de personagens avisando se o navegador ficar sem espaço
+function gravarPersonagens(usuario, lista) {
+  try {
+    localStorage.setItem('primordios_personagens_' + usuario, JSON.stringify(lista));
+    return true;
+  } catch (e) {
+    console.error('Falha ao salvar personagens:', e);
+    if (!window._avisouSemEspaco) {
+      window._avisouSemEspaco = true;
+      alert('⚠ Não consegui salvar: o navegador está sem espaço. Tente usar uma foto menor ou apagar personagens antigos.');
+    }
+    return false;
+  }
 }
 
 function novoPersonagem() {
