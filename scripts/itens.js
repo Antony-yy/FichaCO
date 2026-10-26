@@ -99,6 +99,11 @@ const ACESSORIOS = [
   { nome: 'Óculos da Segunda Vida',   tipo: 'Acessório — Óculos',     raridade: 'Raro',    recarga: 'Descanso longo+', carga: 1, acao: 'Reação',  desc: 'Óculos dourados que brilham à beira da morte. Ao cair a 0 PV, restaura automaticamente 1d10 + Modificador de Vontade em PV.' },
   { nome: 'Dados Coincidentes',       tipo: 'Acessório — Dados',      raridade: 'Incomum', recarga: 'Descanso médio+', carga: 2, acao: 'Bônus',   desc: 'Par de dados de marfim envelhecido com símbolos arcanos em vez de números.' },
   { nome: 'Bússola Eterna',           tipo: 'Acessório — Bússola',    raridade: 'Incomum', recarga: 'Descanso médio+', carga: 2, acao: 'Bônus',   desc: 'Bússola de bronze antigo. Aponta para o local que o usuário mais deseja encontrar no momento, desde que no mesmo plano e a poucos quilômetros.' },
+  { nome: 'Bolsa Espacial',           tipo: 'Acessório — Bolsa',      raridade: 'Incomum', recarga: '',               carga: null, acao: 'Livre',  desc: 'Bolsa extradimensional que armazena até 100 kg ou 1 m³ sem alterar o próprio peso (cerca de 2 kg). Retirar um objeto conhecido é uma ação livre.' },
+  { nome: 'Membrana Pendente',        tipo: 'Acessório — Bracelete',  raridade: 'Incomum', recarga: 'Descanso médio+', carga: 2, acao: 'Bônus',   desc: 'Bracelete com uma membrana mágica que restaura 18 PV e remove uma condição menor, como sangramento, envenenamento leve ou entorpecimento.' },
+  { nome: 'Troca-Troca',              tipo: 'Acessório — Anéis',      raridade: 'Raro',    recarga: 'Descanso longo+', carga: 1, acao: 'Ação',    desc: 'Par de anéis que troca as mentes de duas criaturas conscientes que os estejam usando por até 10 minutos. Ao fim, cada mente retorna ao corpo original.' },
+  { nome: 'Dedo Falso de Confete',    tipo: 'Acessório — Dedo falso', raridade: 'Incomum', recarga: 'Descanso curto+', carga: 2, acao: 'Bônus',   desc: 'Dispara confetes e luz ofuscante em um cone de 3m. Criaturas na área fazem teste de Reflexos; quem falhar fica cego até o fim do próximo turno.' },
+  { nome: 'Colar Calmante',           tipo: 'Acessório — Colar',     raridade: 'Incomum', recarga: 'Descanso curto+', carga: null, acao: 'Passiva', desc: 'Quando entra em estado Morrendo, concede vantagem em uma salvaguarda de Constituição à sua escolha.' },
+  { nome: 'Colar de Luz',             tipo: 'Acessório — Colar',     raridade: 'Incomum', recarga: '',               carga: null, acao: 'Passiva', desc: 'Uma pedra amarela no centro do colar ilumina um raio de 6m em locais com pouca luz.' },
+  { nome: 'Anel de Energia',          tipo: 'Acessório — Anel',      raridade: 'Incomum', recarga: 'Descanso médio+', carga: 2, acao: 'Bônus',   desc: 'Anel com uma pedra azul que restaura 16 PE ao ser ativado.' },
 ];
-
-

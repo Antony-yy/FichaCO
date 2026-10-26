@@ -13,6 +13,8 @@ const estado = {
   acessorio: null,
   talentos: [],
   truques: [],
+  magiasGrimorio: [],
+  grimorioInicializado: false,
   artesDaEspada: [],
   caminhoEspada: [],
   nomePersonagem: ''
@@ -72,6 +74,8 @@ function carregarEstadoBase() {
   if (!estado.constanciasEscolhidas) estado.constanciasEscolhidas = [];
   if (!estado.racaEscolhas) estado.racaEscolhas = {};
   if (!estado.truques) estado.truques = [];
+  if (!estado.magiasGrimorio) estado.magiasGrimorio = [];
+  if (typeof estado.grimorioInicializado !== 'boolean') estado.grimorioInicializado = false;
   if (!estado.artesDaEspada) estado.artesDaEspada = [];
   if (!estado.caminhoEspada) estado.caminhoEspada = [];
   return true;
@@ -115,7 +119,12 @@ function restaurarDadosFicha(p) {
   });
   if (p.foto) guardar('fragmentados_foto', p.foto);
   if (p.desc) guardar('fragmentados_desc', p.desc);
-  guardar('fragmentados_estado', JSON.stringify(p.estadoCompleto));
+  const estadoSalvo = p.estadoCompleto || {};
+  guardar('fragmentados_estado', JSON.stringify({
+    ...estadoSalvo,
+    magiasGrimorio: Array.isArray(estadoSalvo.magiasGrimorio) ? estadoSalvo.magiasGrimorio : [],
+    grimorioInicializado: Boolean(estadoSalvo.grimorioInicializado)
+  }));
 }
 
 // Grava a lista de personagens avisando se o navegador ficar sem espaço
@@ -148,6 +157,8 @@ function novoPersonagem() {
     acessorio: null,
     talentos: [],
     truques: [],
+    magiasGrimorio: [],
+    grimorioInicializado: false,
     nomePersonagem: ''
   });
   salvarEstado();
@@ -274,6 +285,24 @@ const CLASSES_PREVIEW = {
     armaduras: ['Leves'],
     especificacoes: 'Um Bardo tem sua CD (Resistência mágica) igual a 8 + CS de Persuasão, utilizada quando uma magia necessita de teste de resistência.',
     famosos: ['Lyren Cordaclara', 'Belldona Vesper', 'Bren o Sussurro']
+  },
+  Mago: {
+    desc: 'Um estudioso arcano que transforma conhecimento e um grimório pessoal em poder mágico.',
+    dadoVida: '1d6', dadoVidaNum: 6,
+    vidaBase: 6, vidaAtributo: 'Vigor',
+    vidaInicial: '6 + Vigor',
+    vidaNivel: '1d6 (ou 4) + Vigor',
+    energiaInicial: 'Atributo de Sabedoria + Atributo de Inteligência',
+    energiaNivel: 'Bônus de classe + Arcanismo',
+    energiaAtributos: ['Sabedoria', 'Inteligência'],
+    energiaNivelAtributo: 'Inteligência',
+    constanciasFixas: ['Arcanismo', 'História'],
+    constanciasEscolha: ['Conjurar', 'Enganação', 'Furtividade', 'Intuição', 'Medicina', 'Natureza', 'Reflexo'],
+    constanciasEscolhaQtd: 2,
+    armas: ['Armas simples'],
+    armaduras: ['Leves'],
+    especificacoes: 'Começa com um grimório e escolhe 3 magias de volume 1. O limite de magias anotadas é Arcanismo + nível. Só pode conjurar magias transcritas e traduzidas no grimório; transcrever uma magia leva 2 horas menos o bônus de Arcanismo. Magias controladas podem ser guardadas: limite de 1 + modificador de Inteligência, lançando até uma por ação bônus. Dano mágico pode somar Inteligência.',
+    famosos: []
   }
 };
 

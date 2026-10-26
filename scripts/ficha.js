@@ -56,7 +56,8 @@ function calcularPE() {
   const info = CLASSES_PREVIEW[estado.classe];
   const atribs = info ? info.energiaAtributos : ['Sabedoria', 'Vigor'];
   const energiaInicial = atribs.reduce((s, a) => s + calcBonus(estado.constancias[a] || 0), 0);
-  const bonusNivel = bonusDeClasse() + calcBonus(estado.constancias[atribs[0]] || 0);
+  const atribNivel = info ? (info.energiaNivelAtributo || atribs[0]) : 'Sabedoria';
+  const bonusNivel = bonusDeClasse() + calcBonus(estado.constancias[atribNivel] || 0);
   let total = energiaInicial;
   for (let i = 1; i < estado.nivel; i++) total += bonusNivel;
   return Math.max(1, total);
@@ -151,7 +152,7 @@ function _ganhoNivel() {
   const vigor     = calcBonus(estado.constancias[info.vidaAtributo] || 0);
   const rolado    = Math.floor(Math.random() * dado) + 1;
   const ganhoPV   = rolado + vigor;
-  const atribPE   = info.energiaAtributos ? info.energiaAtributos[0] : 'Sabedoria';
+  const atribPE   = info.energiaNivelAtributo || (info.energiaAtributos ? info.energiaAtributos[0] : 'Sabedoria');
   const bonusPE   = bonusDeClasse() + calcBonus(estado.constancias[atribPE] || 0);
 
   const pvMaxAtual = parseInt(sessionStorage.getItem('fragmentados_pvmax')) || 1;
@@ -450,6 +451,14 @@ function removerFoto() {
 // ===== INVENTÁRIO =====
 function carregarInventario() {
   const itens = JSON.parse(sessionStorage.getItem('fragmentados_inventario') || '[]');
+  if (!estado.grimorioInicializado) {
+    if (estado.classe === 'Mago' && !itens.some(item => item.nome === 'Grimório Arcano')) {
+      itens.push({ nome: 'Grimório Arcano', qtd: 1, peso: 1 });
+      sessionStorage.setItem('fragmentados_inventario', JSON.stringify(itens));
+    }
+    estado.grimorioInicializado = true;
+    salvarEstado();
+  }
   const lista = document.getElementById('inventarioLista');
   if (!lista) return;
   lista.innerHTML = '';
@@ -860,6 +869,12 @@ function renderFicha() {
     if (estado.caminho && dados.caminhos[estado.caminho]) {
       habHtml += `<div style="font-size:0.7rem;letter-spacing:2px;color:#c9a84c;margin:12px 0 6px;">CAMINHO: ${estado.caminho.toUpperCase()}</div>`;
       dados.caminhos[estado.caminho].habs.filter(h => estado.nivel >= h.nivel).forEach(h => { habHtml += renderHabFicha(h); });
+    }
+    if (estado.classe === 'Mago' && estado.magiasGrimorio && estado.magiasGrimorio.length > 0) {
+      habHtml += `<div style="font-size:0.7rem;letter-spacing:2px;color:#9d8bdb;margin:12px 0 6px;">GRIMÓRIO INICIAL</div>`;
+      estado.magiasGrimorio.forEach(nome => {
+        habHtml += `<div class="ficha-hab-item"><span class="ficha-hab-nome" style="color:#c5b6f0;">${nome}</span><span style="font-size:0.68rem;color:#666;"> · Volume 1</span></div>`;
+      });
     }
     if (truquesEscolhidos.length > 0) {
       const listaTruquesRender = TRUQUES[estado.classe] || [];
