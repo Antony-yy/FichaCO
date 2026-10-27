@@ -94,7 +94,22 @@ function alterarPE(delta) {
   sincronizarPersonagem();
 }
 
-function gastarPE(custo, recurso = 'PE') {
+const _timersFeedbackPE = new WeakMap();
+
+function animarFeedbackPE(el, classe) {
+  if (!el) return;
+  el.classList.remove(classe);
+  void el.offsetWidth;
+  el.classList.add(classe);
+  clearTimeout(_timersFeedbackPE.get(el));
+  _timersFeedbackPE.set(el, setTimeout(() => {
+    el.classList.remove(classe);
+    if (classe === 'pe-gasto') el.removeAttribute('data-gasto');
+    _timersFeedbackPE.delete(el);
+  }, 1300));
+}
+
+function gastarPE(custo, recurso = 'PE', botao = null) {
   const el = document.getElementById('peAtual');
   if (!el || !Number.isFinite(custo) || custo <= 0) return false;
   const peAtual = parseInt(sessionStorage.getItem('fragmentados_pe') ?? el.textContent, 10);
@@ -107,6 +122,9 @@ function gastarPE(custo, recurso = 'PE') {
     return false;
   }
   alterarPE(-custo);
+  el.dataset.gasto = `−${custo} ${recurso}`;
+  animarFeedbackPE(el, 'pe-gasto');
+  animarFeedbackPE(botao, 'habilidade-usada');
   return true;
 }
 
@@ -1078,7 +1096,7 @@ function renderFicha() {
       const pe     = custoPE(h.nivel);
       const peTag  = h.acao === 'Passiva' ? '' : `<span style="font-size:0.65rem;color:#c9a84c;border:1px solid #c9a84c44;padding:1px 6px;border-radius:2px;margin-right:4px;">${pe} PE</span>`;
       const acaTag = `<span style="font-size:0.65rem;color:#666;border:1px solid #2a2535;padding:1px 6px;border-radius:2px;">${h.acao}</span>`;
-      const usarTag = h.acao === 'Passiva' ? '' : `<button class="c-btn" style="width:auto;padding:1px 7px;font-size:0.65rem;margin-left:4px;" onclick="gastarPE(${pe})" title="Gastar ${pe} PE ao usar esta habilidade">Usar</button>`;
+      const usarTag = h.acao === 'Passiva' ? '' : `<button class="c-btn" style="width:auto;padding:1px 7px;font-size:0.65rem;margin-left:4px;" onclick="gastarPE(${pe}, 'PE', this)" title="Gastar ${pe} PE ao usar esta habilidade">Usar</button>`;
       return `<div class="ficha-hab-item">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
           <span class="ficha-hab-nome">${h.nome} <span style="font-size:0.65rem;color:#555;">[Nv ${h.nivel}]</span></span>
