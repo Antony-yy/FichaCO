@@ -94,6 +94,175 @@ function alterarPE(delta) {
   sincronizarPersonagem();
 }
 
+function gastarPE(custo, recurso = 'PE') {
+  const el = document.getElementById('peAtual');
+  if (!el || !Number.isFinite(custo) || custo <= 0) return false;
+  const peAtual = parseInt(sessionStorage.getItem('fragmentados_pe') ?? el.textContent, 10);
+  if (!Number.isFinite(peAtual)) {
+    alert(`Não foi possível identificar seus ${recurso} atuais.`);
+    return false;
+  }
+  if (peAtual < custo) {
+    alert(`${recurso} insuficiente. Esta habilidade requer ${custo} ${recurso}; você tem ${peAtual} ${recurso}.`);
+    return false;
+  }
+  alterarPE(-custo);
+  return true;
+}
+
+function gastarPV(custo) {
+  const el = document.getElementById('pvAtual');
+  if (!el || !Number.isFinite(custo) || custo <= 0) return false;
+  const pvAtual = parseInt(sessionStorage.getItem('fragmentados_pv') ?? el.textContent, 10);
+  if (!Number.isFinite(pvAtual)) {
+    alert('Não foi possível identificar seus PV atuais.');
+    return false;
+  }
+  if (pvAtual < custo) {
+    alert(`PV insuficiente. Esta magia requer ${custo} PV; você tem ${pvAtual} PV.`);
+    return false;
+  }
+  alterarPV(-custo);
+  return true;
+}
+
+function obterMagiaDoLivro(nome) {
+  return obterListaMagiasDoLivro().find(magia => magia.titulo === nome) || null;
+}
+
+function obterListaMagiasDoLivro() {
+  const volumes = [
+    LIVRO_MAGIAS_V1, LIVRO_MAGIAS_V2, LIVRO_MAGIAS_V3, LIVRO_MAGIAS_V4,
+    LIVRO_MAGIAS_V5, LIVRO_MAGIAS_V6, LIVRO_MAGIAS_V7, LIVRO_MAGIAS_V8,
+    LIVRO_MAGIAS_V9
+  ];
+  const unicas = new Map();
+  volumes.flat().forEach(magia => {
+    if (!magia.subtitulo && /livro-tag-nivel">Vol\.\s*\d+/.test(magia.texto) && !unicas.has(magia.titulo)) {
+      unicas.set(magia.titulo, magia);
+    }
+  });
+  return [...unicas.values()];
+}
+
+function capacidadeGrimorio() {
+  const checks = JSON.parse(sessionStorage.getItem('fragmentados_const_checks') || '{}');
+  const arcanismo = calcBonus((estado.constancias['Inteligência'] || 0) + totalBonusRaca('Inteligência'))
+    + bonusDeClasse() + (checks.Arcanismo || 0);
+  return Math.max(0, estado.nivel + arcanismo);
+}
+
+function adicionarMagiaGrimorio(nome) {
+  if (estado.classe !== 'Mago' || !obterMagiaDoLivro(nome)) return;
+  if (!estado.magiasGrimorio) estado.magiasGrimorio = [];
+  if (estado.magiasGrimorio.includes(nome)) return;
+  const termoAtual = document.getElementById('grimorioBusca')?.value || '';
+  const limite = capacidadeGrimorio();
+  if (estado.magiasGrimorio.length >= limite) {
+    alert(`Grimório cheio. O limite atual é ${limite} magias.`);
+    return;
+  }
+  estado.magiasGrimorio.push(nome);
+  salvarEstado();
+  renderFicha();
+  sincronizarPersonagem();
+  abrirPopupGerenciarGrimorio(document.getElementById('btnGerenciarGrimorio'));
+  const busca = document.getElementById('grimorioBusca');
+  if (busca) {
+    busca.value = termoAtual;
+    busca.dispatchEvent(new Event('input'));
+  }
+}
+
+function removerMagiaGrimorio(indice) {
+  if (estado.classe !== 'Mago' || !Array.isArray(estado.magiasGrimorio)) return;
+  estado.magiasGrimorio.splice(indice, 1);
+  salvarEstado();
+  renderFicha();
+  sincronizarPersonagem();
+}
+
+function abrirPopupGerenciarGrimorio(anchorEl) {
+  if (estado.classe !== 'Mago' || !anchorEl) return;
+  const escolhidas = estado.magiasGrimorio || [];
+  const limite = capacidadeGrimorio();
+  const titulo = document.getElementById('popupCTTitulo');
+  const cont = document.getElementById('popupCTLista');
+  titulo.textContent = `Adicionar magia (${escolhidas.length}/${limite})`;
+  cont.innerHTML = `
+    <input id="grimorioBusca" type="search" placeholder="Buscar magia pelo nome..."
+      style="box-sizing:border-box;width:100%;margin-bottom:8px;padding:7px 9px;background:#0e0c16;border:1px solid #3a3550;border-radius:3px;color:#e0d6c8;font-family:'Georgia',serif;">
+    <div id="grimorioResultados" style="overflow-y:auto;max-height:45vh;"></div>`;
+  const busca = document.getElementById('grimorioBusca');
+  const resultados = document.getElementById('grimorioResultados');
+
+  const renderResultados = () => {
+    if (escolhidas.length >= limite) {
+      resultados.innerHTML = '<div style="font-size:0.75rem;color:#888;padding:8px 2px;">Limite do grimório atingido. Exclua uma magia antes de adicionar outra.</div>';
+      return;
+    }
+    const termo = busca.value.trim().toLocaleLowerCase('pt-BR');
+    const disponiveis = obterListaMagiasDoLivro().filter(magia =>
+      !escolhidas.includes(magia.titulo) && magia.titulo.toLocaleLowerCase('pt-BR').includes(termo)
+    );
+    resultados.innerHTML = '';
+    if (!disponiveis.length) {
+      resultados.innerHTML = '<div style="font-size:0.75rem;color:#666;padding:8px 2px;">Nenhuma magia disponível com esse nome.</div>';
+      return;
+    }
+    disponiveis.slice(0, 40).forEach(magia => {
+      const volume = magia.texto.match(/livro-tag-nivel">Vol\.\s*(\d+)/)?.[1];
+      const linha = document.createElement('div');
+      linha.className = 'item-linha';
+      linha.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;';
+      const nome = document.createElement('span');
+      nome.textContent = magia.titulo;
+      const detalhe = document.createElement('span');
+      detalhe.style.cssText = 'flex-shrink:0;font-size:0.65rem;color:#9d8bdb;';
+      detalhe.textContent = `Vol. ${volume || '?'}`;
+      linha.append(nome, detalhe);
+      linha.title = magia.texto.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      linha.onclick = () => adicionarMagiaGrimorio(magia.titulo);
+      resultados.appendChild(linha);
+    });
+    if (disponiveis.length > 40) {
+      const aviso = document.createElement('div');
+      aviso.style.cssText = 'font-size:0.68rem;color:#666;padding:4px 2px;';
+      aviso.textContent = 'Refine a busca para ver mais resultados.';
+      resultados.appendChild(aviso);
+    }
+  };
+
+  busca.addEventListener('input', renderResultados);
+  renderResultados();
+  _posicionarPopupCT(anchorEl);
+}
+
+function custoManaMagia(magia) {
+  const volume = magia.texto.match(/livro-tag-nivel">Vol\.\s*(\d+)/);
+  if (!volume) return /livro-tag-nivel">Truque/i.test(magia.texto) ? 0 : null;
+  return [0, 2, 4, 6, 10, 14, 18, 24, 30, 36][parseInt(volume[1], 10)] ?? null;
+}
+
+function conjurarMagiaDoGrimorio(indice) {
+  const nome = estado.magiasGrimorio?.[indice];
+  const magia = nome && obterMagiaDoLivro(nome);
+  if (estado.classe !== 'Mago' || !magia) {
+    alert('Não foi possível encontrar esta magia no grimório.');
+    return;
+  }
+
+  const custo = custoManaMagia(magia);
+  if (custo === null) {
+    alert(`Não foi possível identificar o custo de ${nome}.`);
+    return;
+  }
+  const usaPV = /Usa PV em vez de PE/i.test(magia.texto);
+  const gastoConcluido = custo === 0 || (usaPV ? gastarPV(custo) : gastarPE(custo, 'Mana'));
+  if (!gastoConcluido) return;
+  alert(`${nome} conjurada. ${custo} ${usaPV ? 'PV' : 'Mana'} gastos.`);
+}
+
 function calcularPCEMax() {
   const n = estado.nivel;
   if (n >= 17) return 15;
@@ -324,6 +493,99 @@ function abrirPopupEquip(slot) {
 
 function fecharPopupEquip() {
   document.getElementById('popupEquip').classList.remove('aberto');
+}
+
+function rolarAtaqueArma() {
+  const arma = ARMAS.find(item => item.nome === estado.arma);
+  if (!arma) return;
+
+  const formula = arma.dano.match(/(\d+)d(\d+)/i);
+  const atributoAbreviado = arma.dano.match(/\+\s*(For|Des)\b/i)?.[1];
+  const atributo = atributoAbreviado === 'For' ? 'Força' : atributoAbreviado === 'Des' ? 'Destreza' : null;
+  const bonus = atributo
+    ? calcBonus((estado.constancias[atributo] || 0) + totalBonusRaca(atributo))
+    : 0;
+  const descricao = `Ataque: ${arma.nome} (${arma.dano})`;
+
+  if (formula) {
+    const quantidade = Number(formula[1]);
+    const lados = Number(formula[2]);
+    rolagemRapida(Array(quantidade).fill(lados), bonus, descricao);
+    return;
+  }
+
+  const danoFixo = arma.dano.match(/^\s*(\d+)(?:\s*\+\s*(For|Des))?/i);
+  if (danoFixo) {
+    const atributoFixo = danoFixo[2] === 'For' ? 'Força' : danoFixo[2] === 'Des' ? 'Destreza' : null;
+    const bonusFixo = atributoFixo
+      ? calcBonus((estado.constancias[atributoFixo] || 0) + totalBonusRaca(atributoFixo))
+      : 0;
+    rolagemRapida([], Number(danoFixo[1]) + bonusFixo, descricao);
+    return;
+  }
+
+  alert(`Não foi possível interpretar o dano de ${arma.nome}: ${arma.dano}`);
+}
+
+function ajustarRecursoFicha(recurso, quantidade) {
+  const atualEl = document.getElementById(recurso === 'pv' ? 'pvAtual' : 'peAtual');
+  const maxEl = document.getElementById(recurso === 'pv' ? 'pvMax' : 'peMax');
+  if (!atualEl || !maxEl) return 0;
+
+  const atual = Number.parseInt(atualEl.textContent, 10);
+  const maximo = Number.parseInt(maxEl.value, 10);
+  if (!Number.isFinite(atual) || !Number.isFinite(maximo)) return 0;
+
+  const novo = Math.min(maximo, Math.max(0, atual + quantidade));
+  const aplicado = novo - atual;
+  if (recurso === 'pv') alterarPV(aplicado);
+  else alterarPE(aplicado);
+  return aplicado;
+}
+
+function usarAcessorio() {
+  const acessorio = ACESSORIOS.find(item => item.nome === estado.acessorio);
+  if (!acessorio) return;
+
+  if (acessorio.nome === 'Membrana Pendente') {
+    const aplicado = ajustarRecursoFicha('pv', 18);
+    alert(`Membrana Pendente: ${aplicado > 0 ? `recuperou ${aplicado} PV` : 'PV já está no máximo'}. Remova manualmente uma condição menor, se houver.`);
+    return;
+  }
+
+  if (acessorio.nome === 'Anel de Energia') {
+    const aplicado = ajustarRecursoFicha('pe', 16);
+    alert(`Anel de Energia: ${aplicado > 0 ? `recuperou ${aplicado} PE` : 'PE já está no máximo'}.`);
+    return;
+  }
+
+  if (acessorio.nome === 'Óculos da Segunda Vida') {
+    const pvAtual = Number.parseInt(sessionStorage.getItem('fragmentados_pv') || '0', 10);
+    if (pvAtual > 0) {
+      alert('Os Óculos da Segunda Vida só podem ser usados quando você chega a 0 PV.');
+      return;
+    }
+
+    const mapa = {};
+    Object.entries(CONSTANCIAS_MAP).forEach(([atributo, lista]) => lista.forEach(nome => { mapa[nome] = atributo; }));
+    const atributoVontade = mapa.Vontade;
+    const checks = JSON.parse(sessionStorage.getItem('fragmentados_const_checks') || '{}');
+    const bonusVontade = calcBonus((estado.constancias[atributoVontade] || 0) + totalBonusRaca(atributoVontade))
+      + bonusDeClasse() + (checks.Vontade || 0);
+    rolagemRapida([10], bonusVontade, 'Óculos da Segunda Vida: recuperação de PV', resultado => {
+      const recuperado = ajustarRecursoFicha('pv', resultado);
+      alert(`Óculos da Segunda Vida: você recuperou ${recuperado} PV.`);
+    });
+    return;
+  }
+
+  if (!acessorio.acao || acessorio.acao === 'Passiva') {
+    alert(`${acessorio.nome} é um acessório passivo.\n\n${acessorio.desc}`);
+    return;
+  }
+
+  const recarga = acessorio.recarga ? `\nRecarga: ${acessorio.recarga}.` : '';
+  alert(`${acessorio.nome} — ${acessorio.acao}\n\n${acessorio.desc}${recarga}\n\nResolva o efeito descrito conforme a situação da aventura.`);
 }
 
 function abrirConstancias(atributo, vTotal) {
@@ -708,6 +970,8 @@ function renderFicha() {
     if (val) h += `<button class="c-btn" style="width:auto;padding:0 8px;font-size:0.7rem;color:#ff4444;border-color:#ff444444;" onclick="limparEquip('${slot}')">&#x2715;</button>`;
     h += `</span></div>`;
     if (item) h += `<div style="font-size:0.72rem;color:#aaa;margin-bottom:10px;">${item.dano || ''}${slot === 'acessorio' && item.desc ? '<br><span style="font-size:0.7rem;color:#666;line-height:1.5;display:block;margin-top:4px;">' + item.desc + '</span>' : ''}</div>`;
+    if (item && slot === 'arma') h += `<button class="c-btn" style="width:100%;margin-bottom:10px;color:#c9a84c;border-color:#c9a84c66;" onclick="rolarAtaqueArma()">⚔ Atacar · rolar dano</button>`;
+    else if (item && slot === 'acessorio') h += `<button class="c-btn" style="width:100%;margin-bottom:10px;color:#c9a84c;border-color:#c9a84c66;" onclick="usarAcessorio()">${item.acao === 'Passiva' ? 'Ver efeito passivo' : '✦ Usar acessório'}</button>`;
     else h += `<div style="margin-bottom:10px;"></div>`;
     return h;
   };
@@ -750,7 +1014,7 @@ function renderFicha() {
         <div style="font-size:0.7rem;color:#555;margin-top:6px;">Máx: <input id="pvMax" type="number" value="${pvMax}" min="1" style="width:50px;background:transparent;border:none;border-bottom:1px solid #3a3550;color:#aaa;font-size:0.75rem;text-align:center;" onchange="document.getElementById('pvAtual').textContent=this.value;sessionStorage.setItem('fragmentados_pvmax',this.value);sessionStorage.setItem('fragmentados_pv',this.value);sincronizarPersonagem();"></div>
       </div>
       <div>
-        <div style="font-size:0.7rem;letter-spacing:2px;color:#c9a84c;margin-bottom:10px;">PONTOS DE ENERGIA</div>
+        <div style="font-size:0.7rem;letter-spacing:2px;color:#c9a84c;margin-bottom:10px;">${estado.classe === 'Mago' ? 'MANA' : 'PONTOS DE ENERGIA'}</div>
         <div style="display:flex;align-items:center;gap:10px;">
           <button class="c-btn" onclick="alterarPE(-1)">−</button>
           <span id="peAtual" style="font-size:1.6rem;color:#e0d6c8;min-width:40px;text-align:center;">${peAtual}</span>
@@ -810,10 +1074,11 @@ function renderFicha() {
       const pe     = custoPE(h.nivel);
       const peTag  = h.acao === 'Passiva' ? '' : `<span style="font-size:0.65rem;color:#c9a84c;border:1px solid #c9a84c44;padding:1px 6px;border-radius:2px;margin-right:4px;">${pe} PE</span>`;
       const acaTag = `<span style="font-size:0.65rem;color:#666;border:1px solid #2a2535;padding:1px 6px;border-radius:2px;">${h.acao}</span>`;
+      const usarTag = h.acao === 'Passiva' ? '' : `<button class="c-btn" style="width:auto;padding:1px 7px;font-size:0.65rem;margin-left:4px;" onclick="gastarPE(${pe})" title="Gastar ${pe} PE ao usar esta habilidade">Usar</button>`;
       return `<div class="ficha-hab-item">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
           <span class="ficha-hab-nome">${h.nome} <span style="font-size:0.65rem;color:#555;">[Nv ${h.nivel}]</span></span>
-          <span>${peTag}${acaTag}</span>
+          <span>${peTag}${acaTag}${usarTag}</span>
         </div>
         <div style="font-size:0.78rem;color:#aaa;line-height:1.6;">${h.desc}${evoHtml}</div>
       </div>`;
@@ -870,10 +1135,38 @@ function renderFicha() {
       habHtml += `<div style="font-size:0.7rem;letter-spacing:2px;color:#c9a84c;margin:12px 0 6px;">CAMINHO: ${estado.caminho.toUpperCase()}</div>`;
       dados.caminhos[estado.caminho].habs.filter(h => estado.nivel >= h.nivel).forEach(h => { habHtml += renderHabFicha(h); });
     }
-    if (estado.classe === 'Mago' && estado.magiasGrimorio && estado.magiasGrimorio.length > 0) {
-      habHtml += `<div style="font-size:0.7rem;letter-spacing:2px;color:#9d8bdb;margin:12px 0 6px;">GRIMÓRIO INICIAL</div>`;
-      estado.magiasGrimorio.forEach(nome => {
-        habHtml += `<div class="ficha-hab-item"><span class="ficha-hab-nome" style="color:#c5b6f0;">${nome}</span><span style="font-size:0.68rem;color:#666;"> · Volume 1</span></div>`;
+    if (estado.classe === 'Mago') {
+      const magiasGrimorio = estado.magiasGrimorio || [];
+      const limiteGrimorio = capacidadeGrimorio();
+      habHtml += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 6px;">
+        <span style="font-size:0.7rem;letter-spacing:2px;color:#9d8bdb;">GRIMÓRIO (${magiasGrimorio.length}/${limiteGrimorio})</span>
+        <button id="btnGerenciarGrimorio" class="c-btn" style="width:auto;padding:2px 8px;font-size:0.65rem;" onclick="abrirPopupGerenciarGrimorio(this)">+ Adicionar magia</button>
+      </div>`;
+      if (magiasGrimorio.length === 0) {
+        habHtml += '<div class="ficha-hab-item" style="font-size:0.75rem;color:#666;">Nenhuma magia anotada.</div>';
+      }
+      magiasGrimorio.forEach((nome, indice) => {
+        const magia = obterMagiaDoLivro(nome);
+        if (!magia) {
+          habHtml += `<div class="ficha-hab-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <span><span class="ficha-hab-nome" style="color:#c5b6f0;">${nome}</span><span style="font-size:0.68rem;color:#ff8888;"> · Magia não encontrada no livro</span></span>
+            <button class="c-btn" style="width:auto;padding:1px 7px;font-size:0.65rem;color:#ff8888;" onclick="removerMagiaGrimorio(${indice})">Excluir</button>
+          </div>`;
+          return;
+        }
+        const custo = custoManaMagia(magia);
+        const usaPV = /Usa PV em vez de PE/i.test(magia.texto);
+        const recurso = usaPV ? 'PV' : 'Mana';
+        habHtml += `<div class="ficha-hab-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;">
+            <span class="ficha-hab-nome" style="color:#c5b6f0;">${nome} <span style="font-size:0.65rem;color:#777;">· Vol. ${magia.texto.match(/livro-tag-nivel">Vol\.\s*(\d+)/)?.[1] || '?'}</span></span>
+            <span style="display:flex;gap:4px;flex-shrink:0;">
+              <button class="c-btn" style="width:auto;padding:1px 7px;font-size:0.65rem;" onclick="conjurarMagiaDoGrimorio(${indice})" title="Gastar ${custo} ${recurso} ao conjurar">Conjurar · ${custo} ${recurso}</button>
+              <button class="c-btn" style="width:auto;padding:1px 7px;font-size:0.65rem;color:#ff8888;" onclick="removerMagiaGrimorio(${indice})" title="Excluir magia do grimório">Excluir</button>
+            </span>
+          </div>
+          <div style="font-size:0.75rem;color:#aaa;line-height:1.6;">${magia.texto}</div>
+        </div>`;
       });
     }
     if (truquesEscolhidos.length > 0) {
@@ -1221,7 +1514,8 @@ function toggleArteEspada(nome) {
 document.addEventListener('click', e => {
   const p = document.getElementById('popupCaminhoTalentos');
   if (!p || !p.classList.contains('aberto')) return;
-  if (!p.contains(e.target) && !e.target.classList.contains('hab-badge')) fecharPopupCT();
+  const abriuGrimorio = e.target instanceof Element && e.target.closest('#btnGerenciarGrimorio');
+  if (!p.contains(e.target) && !e.composedPath().includes(p) && !abriuGrimorio && !e.target.classList.contains('hab-badge')) fecharPopupCT();
 });
 
 // ===== MODO EDIÇÃO =====
