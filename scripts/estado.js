@@ -89,7 +89,10 @@ const CHAVES_FICHA = [
   'fragmentados_pvmax', 'fragmentados_pemax',
   'fragmentados_pv', 'fragmentados_pe',
   'fragmentados_ca', 'fragmentados_xp', 'fragmentados_pce',
-  'fragmentados_pesomax', 'fragmentados_inventario', 'fragmentados_const_checks'
+  'fragmentados_pesomax', 'fragmentados_inventario', 'fragmentados_const_checks',
+  'fragmentados_anel_escama_cargas', 'fragmentados_anel_escama_ativo',
+  'fragmentados_puxa_corte_cargas', 'fragmentados_colar_cura_cargas',
+  'fragmentados_pedra_reflexao_cargas'
 ];
 
 // Junta tudo da ficha aberta (inventário, peso, checks, PV/PE/CA/XP...) num objeto só

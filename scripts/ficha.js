@@ -66,9 +66,22 @@ function calcularPE() {
 function alterarCA(delta) {
   const el = document.getElementById('caValor');
   if (!el) return;
-  let val = Math.max(0, parseInt(el.textContent) + delta);
-  el.textContent = val;
-  sessionStorage.setItem('fragmentados_ca', val);
+  const bonusEscama = sessionStorage.getItem('fragmentados_anel_escama_ativo') === 'true' ? 2 : 0;
+  const base = Number.parseInt(sessionStorage.getItem('fragmentados_ca') ?? String(Number.parseInt(el.textContent, 10) - bonusEscama), 10);
+  definirCAFicha(Math.max(0, base + delta));
+}
+
+function definirCAFicha(valor) {
+  const caBase = Number.parseInt(valor, 10);
+  if (!Number.isFinite(caBase)) return;
+  sessionStorage.setItem('fragmentados_ca', caBase);
+  const el = document.getElementById('caValor');
+  if (el) {
+    const bonusEscama = sessionStorage.getItem('fragmentados_anel_escama_ativo') === 'true' ? 2 : 0;
+    el.textContent = caBase + bonusEscama;
+  }
+  const ajuste = document.getElementById('caAjuste');
+  if (ajuste) ajuste.value = caBase;
   sincronizarPersonagem();
 }
 
@@ -569,6 +582,26 @@ function usarAcessorio() {
   const acessorio = ACESSORIOS.find(item => item.nome === estado.acessorio);
   if (!acessorio) return;
 
+  if (acessorio.nome === 'Colar de Cura') {
+    usarColarCura();
+    return;
+  }
+
+  if (acessorio.nome === 'Pedra da Reflexão') {
+    usarPedraReflexao();
+    return;
+  }
+
+  if (acessorio.nome === 'Puxa Corte') {
+    usarCargaPuxaCorte();
+    return;
+  }
+
+  if (acessorio.nome === 'Anel de Escama Endurecida') {
+    ativarAnelEscama();
+    return;
+  }
+
   if (acessorio.nome === 'Membrana Pendente') {
     const aplicado = ajustarRecursoFicha('pv', 18);
     alert(`Membrana Pendente: ${aplicado > 0 ? `recuperou ${aplicado} PV` : 'PV já está no máximo'}. Remova manualmente uma condição menor, se houver.`);
@@ -608,6 +641,191 @@ function usarAcessorio() {
 
   const recarga = acessorio.recarga ? `\nRecarga: ${acessorio.recarga}.` : '';
   alert(`${acessorio.nome} — ${acessorio.acao}\n\n${acessorio.desc}${recarga}\n\nResolva o efeito descrito conforme a situação da aventura.`);
+}
+
+function atualizarColarCuraUI(mensagem = '') {
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_colar_cura_cargas') || '2', 10);
+  const info = document.getElementById('colarCuraInfo');
+  if (info) info.textContent = mensagem ? `Cargas: ${cargas}/2 · ${mensagem}` : `Cargas: ${cargas}/2`;
+  const usar = document.getElementById('colarCuraUsar');
+  if (usar) usar.disabled = cargas <= 0;
+  const recarregar = document.getElementById('colarCuraRecarregar');
+  if (recarregar) recarregar.disabled = cargas >= 2;
+}
+
+function usarColarCura() {
+  if (estado.acessorio !== 'Colar de Cura') return;
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_colar_cura_cargas') || '2', 10);
+  if (cargas <= 0) {
+    atualizarColarCuraUI('sem cargas; recarregue após descanso ou meditação média+');
+    return;
+  }
+
+  sessionStorage.setItem('fragmentados_colar_cura_cargas', cargas - 1);
+  atualizarColarCuraUI();
+  sincronizarPersonagem();
+  rolagemRapida([12], 0, 'Colar de Cura: recuperação de PV', resultado => {
+    const recuperado = ajustarRecursoFicha('pv', resultado);
+    atualizarColarCuraUI(`rolou ${resultado}; recuperou ${recuperado} PV`);
+  });
+}
+
+function recarregarColarCura() {
+  if (estado.acessorio !== 'Colar de Cura') return;
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_colar_cura_cargas') || '2', 10);
+  if (cargas >= 2) {
+    atualizarColarCuraUI('já está com as 2 cargas');
+    return;
+  }
+  sessionStorage.setItem('fragmentados_colar_cura_cargas', '2');
+  atualizarColarCuraUI('recarregado após descanso ou meditação média+');
+  sincronizarPersonagem();
+}
+
+function atualizarPedraReflexaoUI(mensagem = '') {
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_pedra_reflexao_cargas') || '6', 10);
+  const info = document.getElementById('pedraReflexaoInfo');
+  if (info) info.textContent = mensagem ? `Cargas: ${cargas}/6 · ${mensagem}` : `Cargas: ${cargas}/6`;
+  const usar = document.getElementById('pedraReflexaoUsar');
+  if (usar) usar.disabled = cargas <= 0;
+  const recarregar = document.getElementById('pedraReflexaoRecarregar');
+  if (recarregar) recarregar.disabled = cargas >= 6;
+}
+
+function usarPedraReflexao() {
+  if (estado.acessorio !== 'Pedra da Reflexão') return;
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_pedra_reflexao_cargas') || '6', 10);
+  if (cargas <= 0) {
+    atualizarPedraReflexaoUI('sem cargas; recarregue após descanso ou meditação média+');
+    return;
+  }
+
+  sessionStorage.setItem('fragmentados_pedra_reflexao_cargas', cargas - 1);
+  atualizarPedraReflexaoUI('rolando d6...');
+  sincronizarPersonagem();
+  rolagemRapida([6], 0, 'Pedra da Reflexão: visão do futuro', resultado => {
+    const efeito = resultado <= 3
+      ? 'desvantagem no próximo ataque'
+      : 'vantagem no próximo ataque';
+    atualizarPedraReflexaoUI(`saiu ${resultado}: ${efeito}`);
+    sincronizarPersonagem();
+  });
+}
+
+function recarregarPedraReflexao() {
+  if (estado.acessorio !== 'Pedra da Reflexão') return;
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_pedra_reflexao_cargas') || '6', 10);
+  if (cargas >= 6) {
+    atualizarPedraReflexaoUI('já está com as 6 cargas');
+    return;
+  }
+  sessionStorage.setItem('fragmentados_pedra_reflexao_cargas', '6');
+  atualizarPedraReflexaoUI('recarregada após descanso ou meditação média+');
+  sincronizarPersonagem();
+}
+
+function atualizarAnelEscamaUI() {
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_anel_escama_cargas') || '2', 10);
+  const ativo = sessionStorage.getItem('fragmentados_anel_escama_ativo') === 'true';
+  const base = Number.parseInt(sessionStorage.getItem('fragmentados_ca') || '0', 10);
+  const caEl = document.getElementById('caValor');
+  if (caEl && base > 0) caEl.textContent = base + (ativo ? 2 : 0);
+
+  const caInfo = document.getElementById('anelEscamaCAInfo');
+  if (caInfo) {
+    caInfo.style.display = ativo ? 'block' : 'none';
+    caInfo.textContent = ativo ? `Anel ativo: +2 CA (total ${base + 2})` : '';
+  }
+
+  const info = document.getElementById('anelEscamaInfo');
+  if (info) {
+    info.textContent = `Cargas: ${cargas}/2 · ${ativo ? 'Escudo ativo (+2 CA)' : 'Escudo inativo'}`;
+    info.style.color = ativo ? '#7ecfb3' : '#888';
+  }
+
+  const usar = document.getElementById('anelEscamaUsar');
+  if (usar) {
+    usar.textContent = ativo ? 'Fui acertado — encerrar escudo' : '✦ Ativar escudo (+2 CA)';
+    usar.onclick = ativo ? encerrarEscudoAnelEscama : ativarAnelEscama;
+    usar.disabled = !ativo && cargas <= 0;
+    usar.title = ativo ? 'O escudo termina quando você é acertado' : cargas > 0 ? 'Gasta 1 carga; ação bônus ou reação' : 'Sem cargas. Recarregue ficando submerso por 1 turno.';
+  }
+
+  const recarregar = document.getElementById('anelEscamaRecarregar');
+  if (recarregar) recarregar.disabled = cargas >= 2;
+}
+
+function ativarAnelEscama() {
+  if (estado.acessorio !== 'Anel de Escama Endurecida') return;
+  if (sessionStorage.getItem('fragmentados_anel_escama_ativo') === 'true') {
+    alert('O escudo do Anel de Escama Endurecida já está ativo.');
+    return;
+  }
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_anel_escama_cargas') || '2', 10);
+  if (cargas <= 0) {
+    alert('O Anel de Escama Endurecida está sem cargas. Fique submerso embaixo da água por 1 turno para recarregá-lo.');
+    return;
+  }
+  sessionStorage.setItem('fragmentados_anel_escama_cargas', cargas - 1);
+  sessionStorage.setItem('fragmentados_anel_escama_ativo', 'true');
+  atualizarAnelEscamaUI();
+  sincronizarPersonagem();
+}
+
+function encerrarEscudoAnelEscama() {
+  if (sessionStorage.getItem('fragmentados_anel_escama_ativo') !== 'true') return;
+  sessionStorage.setItem('fragmentados_anel_escama_ativo', 'false');
+  atualizarAnelEscamaUI();
+  sincronizarPersonagem();
+}
+
+function recarregarAnelEscama() {
+  if (estado.acessorio !== 'Anel de Escama Endurecida') return;
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_anel_escama_cargas') || '2', 10);
+  if (cargas >= 2) {
+    alert('O Anel de Escama Endurecida já está com as 2 cargas.');
+    return;
+  }
+  sessionStorage.setItem('fragmentados_anel_escama_cargas', '2');
+  atualizarAnelEscamaUI();
+  sincronizarPersonagem();
+  alert('Anel de Escama Endurecida recarregado após ficar submerso por 1 turno.');
+}
+
+function atualizarPuxaCorteUI() {
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_puxa_corte_cargas') || '5', 10);
+  const info = document.getElementById('puxaCorteInfo');
+  if (info) info.textContent = `Cargas: ${cargas}/5`;
+  const usar = document.getElementById('puxaCorteUsar');
+  if (usar) usar.disabled = cargas <= 0;
+  const recarregar = document.getElementById('puxaCorteRecarregar');
+  if (recarregar) recarregar.disabled = cargas >= 5;
+}
+
+function usarCargaPuxaCorte() {
+  if (estado.acessorio !== 'Puxa Corte') return;
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_puxa_corte_cargas') || '5', 10);
+  if (cargas <= 0) {
+    alert('O anel Puxa Corte está sem cargas. Recarregue-o após um descanso longo ou meditação longa.');
+    return;
+  }
+  sessionStorage.setItem('fragmentados_puxa_corte_cargas', cargas - 1);
+  atualizarPuxaCorteUI();
+  sincronizarPersonagem();
+  alert(`Puxa Corte: 1 carga gasta (${cargas - 1}/5). Reduza em 10 o dano cortante recebido e ignore o ferimento complementar desse golpe.`);
+}
+
+function recarregarPuxaCorte() {
+  if (estado.acessorio !== 'Puxa Corte') return;
+  const cargas = Number.parseInt(sessionStorage.getItem('fragmentados_puxa_corte_cargas') || '5', 10);
+  if (cargas >= 5) {
+    alert('O anel Puxa Corte já está com as 5 cargas.');
+    return;
+  }
+  sessionStorage.setItem('fragmentados_puxa_corte_cargas', '5');
+  atualizarPuxaCorteUI();
+  sincronizarPersonagem();
+  alert('Anel Puxa Corte recarregado após um descanso longo ou meditação longa.');
 }
 
 function abrirConstancias(atributo, vTotal) {
@@ -984,6 +1202,19 @@ function renderFicha() {
   // --- EQUIPAMENTOS ---
   const slotHtml = (label, slot, lista, val) => {
     const item = lista.find(x => x.nome === val);
+    if (item?.nome === 'Anel de Escama Endurecida') {
+      if (sessionStorage.getItem('fragmentados_anel_escama_cargas') === null) sessionStorage.setItem('fragmentados_anel_escama_cargas', '2');
+      if (sessionStorage.getItem('fragmentados_anel_escama_ativo') === null) sessionStorage.setItem('fragmentados_anel_escama_ativo', 'false');
+    }
+    if (item?.nome === 'Puxa Corte' && sessionStorage.getItem('fragmentados_puxa_corte_cargas') === null) {
+      sessionStorage.setItem('fragmentados_puxa_corte_cargas', '5');
+    }
+    if (item?.nome === 'Colar de Cura' && sessionStorage.getItem('fragmentados_colar_cura_cargas') === null) {
+      sessionStorage.setItem('fragmentados_colar_cura_cargas', '2');
+    }
+    if (item?.nome === 'Pedra da Reflexão' && sessionStorage.getItem('fragmentados_pedra_reflexao_cargas') === null) {
+      sessionStorage.setItem('fragmentados_pedra_reflexao_cargas', '6');
+    }
     let h = `<div style="font-size:0.7rem;letter-spacing:2px;color:#c9a84c;margin-bottom:4px;">${label}</div>`;
     h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">`;
     h += `<span style="font-size:0.85rem;color:#e0d6c8;">${val || '—'}</span>`;
@@ -991,9 +1222,13 @@ function renderFicha() {
     h += `<button class="c-btn" style="width:auto;padding:0 8px;font-size:0.7rem;" onclick="abrirPopupEquip('${slot}')">trocar</button>`;
     if (val) h += `<button class="c-btn" style="width:auto;padding:0 8px;font-size:0.7rem;color:#ff4444;border-color:#ff444444;" onclick="limparEquip('${slot}')">&#x2715;</button>`;
     h += `</span></div>`;
-    if (item) h += `<div style="font-size:0.72rem;color:#aaa;margin-bottom:10px;">${item.dano || ''}${slot === 'acessorio' && item.desc ? '<br><span style="font-size:0.7rem;color:#666;line-height:1.5;display:block;margin-top:4px;">' + item.desc + '</span>' : ''}</div>`;
+    if (item) h += `<div style="font-size:0.72rem;color:#aaa;margin-bottom:10px;">${item.dano || ''}${slot === 'acessorio' && item.desc ? '<br><span style="font-size:0.7rem;color:#666;line-height:1.5;display:block;margin-top:4px;">' + item.desc + '</span>' : ''}${item.nome === 'Anel de Escama Endurecida' ? '<br><span id="anelEscamaInfo" style="font-size:0.7rem;display:block;margin-top:6px;"></span>' : ''}${item.nome === 'Puxa Corte' ? '<br><span id="puxaCorteInfo" style="font-size:0.7rem;color:#888;display:block;margin-top:6px;"></span>' : ''}${item.nome === 'Colar de Cura' ? '<br><span id="colarCuraInfo" style="font-size:0.7rem;color:#888;display:block;margin-top:6px;"></span>' : ''}${item.nome === 'Pedra da Reflexão' ? '<br><span id="pedraReflexaoInfo" style="font-size:0.7rem;color:#888;display:block;margin-top:6px;"></span>' : ''}</div>`;
     if (item && slot === 'arma') h += `<button class="c-btn" style="width:100%;margin-bottom:10px;color:#c9a84c;border-color:#c9a84c66;" onclick="rolarAtaqueArma()">⚔ Atacar · rolar dano</button>`;
-    else if (item && slot === 'acessorio') h += `<button class="c-btn" style="width:100%;margin-bottom:10px;color:#c9a84c;border-color:#c9a84c66;" onclick="usarAcessorio()">${item.acao === 'Passiva' ? 'Ver efeito passivo' : '✦ Usar acessório'}</button>`;
+    else if (item?.nome === 'Anel de Escama Endurecida') h += `<button id="anelEscamaUsar" class="c-btn acessorio-acao-btn" style="margin-bottom:6px;color:#c9a84c;border-color:#c9a84c66;" onclick="ativarAnelEscama()">✦ Ativar escudo (+2 CA)</button><button id="anelEscamaRecarregar" class="c-btn acessorio-acao-btn" style="margin-bottom:10px;" onclick="recarregarAnelEscama()">↻ Recarregar (submerso por 1 turno)</button>`;
+    else if (item?.nome === 'Puxa Corte') h += `<button id="puxaCorteUsar" class="c-btn acessorio-acao-btn" style="margin-bottom:6px;color:#c9a84c;border-color:#c9a84c66;" onclick="usarCargaPuxaCorte()">✦ Anular 10 de dano cortante</button><button id="puxaCorteRecarregar" class="c-btn acessorio-acao-btn" style="margin-bottom:10px;" onclick="recarregarPuxaCorte()">↻ Recarregar (descanso/meditação longa)</button>`;
+    else if (item?.nome === 'Colar de Cura') h += `<button id="colarCuraUsar" class="c-btn acessorio-acao-btn" style="margin-bottom:6px;color:#c9a84c;border-color:#c9a84c66;" onclick="usarColarCura()">✦ Rolar cura (1d12 PV)</button><button id="colarCuraRecarregar" class="c-btn acessorio-acao-btn" style="margin-bottom:10px;" onclick="recarregarColarCura()">↻ Recarregar (descanso/meditação média+)</button>`;
+    else if (item?.nome === 'Pedra da Reflexão') h += `<button id="pedraReflexaoUsar" class="c-btn acessorio-acao-btn" style="margin-bottom:6px;color:#c9a84c;border-color:#c9a84c66;" onclick="usarPedraReflexao()">✦ Rolar previsão (1d6)</button><button id="pedraReflexaoRecarregar" class="c-btn acessorio-acao-btn" style="margin-bottom:10px;" onclick="recarregarPedraReflexao()">↻ Recarregar (descanso/meditação média+)</button>`;
+    else if (item && slot === 'acessorio') h += `<button class="c-btn acessorio-acao-btn" style="margin-bottom:10px;color:#c9a84c;border-color:#c9a84c66;" onclick="usarAcessorio()">${item.acao === 'Passiva' ? 'Ver efeito passivo' : '✦ Usar acessório'}</button>`;
     else h += `<div style="margin-bottom:10px;"></div>`;
     return h;
   };
@@ -1014,6 +1249,8 @@ function renderFicha() {
   const pvAtual = parseInt(sessionStorage.getItem('fragmentados_pv')) ?? pvMax;
   const peAtual = parseInt(sessionStorage.getItem('fragmentados_pe')) ?? peMax;
   const caAtual = parseInt(sessionStorage.getItem('fragmentados_ca')) || caBase;
+  const anelEscamaAtivo = sessionStorage.getItem('fragmentados_anel_escama_ativo') === 'true';
+  if (sessionStorage.getItem('fragmentados_ca') === null) sessionStorage.setItem('fragmentados_ca', caAtual);
   c.innerHTML += `
     <div class="ficha-bloco" style="min-width:220px;">
       <h4>Vitalidade</h4>
@@ -1021,10 +1258,11 @@ function renderFicha() {
         <div style="font-size:0.7rem;letter-spacing:2px;color:#c9a84c;margin-bottom:10px;">CLASSE DE ARMADURA</div>
         <div style="display:flex;align-items:center;gap:10px;">
           <button class="c-btn" onclick="alterarCA(-1)">−</button>
-          <span id="caValor" style="font-size:1.6rem;color:#e0d6c8;min-width:40px;text-align:center;">${caAtual}</span>
+          <span id="caValor" style="font-size:1.6rem;color:#e0d6c8;min-width:40px;text-align:center;">${caAtual + (anelEscamaAtivo ? 2 : 0)}</span>
           <button class="c-btn" onclick="alterarCA(1)">+</button>
         </div>
-        <div style="font-size:0.7rem;color:#555;margin-top:6px;">Ajustar: <input type="number" value="${caAtual}" min="1" style="width:50px;background:transparent;border:none;border-bottom:1px solid #3a3550;color:#aaa;font-size:0.75rem;text-align:center;" onchange="document.getElementById('caValor').textContent=this.value;sessionStorage.setItem('fragmentados_ca',this.value);sincronizarPersonagem();"></div>
+        <div style="font-size:0.7rem;color:#555;margin-top:6px;">Ajustar base: <input id="caAjuste" type="number" value="${caAtual}" min="1" style="width:50px;background:transparent;border:none;border-bottom:1px solid #3a3550;color:#aaa;font-size:0.75rem;text-align:center;" onchange="definirCAFicha(this.value)"></div>
+        <div id="anelEscamaCAInfo" style="font-size:0.7rem;color:#7ecfb3;margin-top:5px;${anelEscamaAtivo ? '' : 'display:none;'}">Anel ativo: +2 CA (total ${caAtual + 2})</div>
       </div>
       <div style="margin-bottom:20px;">
         <div style="font-size:0.7rem;letter-spacing:2px;color:#c9a84c;margin-bottom:10px;">PONTOS DE VIDA</div>
@@ -1232,6 +1470,10 @@ function renderFicha() {
 
   carregarInventario();
   _wrapLayout(layout);
+  atualizarAnelEscamaUI();
+  atualizarPuxaCorteUI();
+  atualizarColarCuraUI();
+  atualizarPedraReflexaoUI();
 }
 
 // posições default dos blocos no layout 3

@@ -101,6 +101,23 @@ body { background: radial-gradient(ellipse at center, #12101a 0%, #0a0a0f 100%);
 .ficha-hab-item:last-child { border-bottom: none; }
 .ficha-hab-nome { color: var(--cor-texto); }
 
+.acessorio-acao-btn {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 34px;
+  padding: 7px 10px;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+}
+
+.acessorio-acao-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 #peAtual {
   display: inline-block;
   position: relative;
