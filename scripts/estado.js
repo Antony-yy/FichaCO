@@ -11,6 +11,8 @@ const estado = {
   arma: null,
   armadura: null,
   acessorio: null,
+  acessoriosEquipados: {},
+  acessoriosCargas: {},
   talentos: [],
   truques: [],
   magiasGrimorio: [],
@@ -78,6 +80,8 @@ function carregarEstadoBase() {
   if (typeof estado.grimorioInicializado !== 'boolean') estado.grimorioInicializado = false;
   if (!estado.artesDaEspada) estado.artesDaEspada = [];
   if (!estado.caminhoEspada) estado.caminhoEspada = [];
+  if (!estado.acessoriosEquipados || typeof estado.acessoriosEquipados !== 'object') estado.acessoriosEquipados = {};
+  if (!estado.acessoriosCargas || typeof estado.acessoriosCargas !== 'object') estado.acessoriosCargas = {};
   return true;
 }
 
@@ -158,6 +162,8 @@ function novoPersonagem() {
     arma: null,
     armadura: null,
     acessorio: null,
+    acessoriosEquipados: {},
+    acessoriosCargas: {},
     talentos: [],
     truques: [],
     magiasGrimorio: [],

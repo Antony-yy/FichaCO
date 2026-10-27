@@ -119,7 +119,7 @@
     Object.assign(estado, {
       personagem: null, classe: null, nivel: 1, caminho: null,
       constancias: { Vigor: 0, Destreza: 0, Sabedoria: 0, 'Intelig\u00eancia': 0, 'For\u00e7a': 0, Carisma: 0 },
-      constanciasEscolhidas: [], arma: null, armadura: null, acessorio: null, talentos: [],
+      constanciasEscolhidas: [], arma: null, armadura: null, acessorio: null, acessoriosEquipados: {}, acessoriosCargas: {}, talentos: [],
       truques: [], magiasGrimorio: [], grimorioInicializado: false, nomePersonagem: ''
     });
     salvarEstado();
@@ -142,6 +142,8 @@
     estado.arma = null;
     estado.armadura = null;
     estado.acessorio = null;
+    estado.acessoriosEquipados = {};
+    estado.acessoriosCargas = {};
     estado.talentos = [];
     estado.truques = [];
     estado.magiasGrimorio = [];

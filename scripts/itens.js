@@ -80,6 +80,7 @@ const ARMADURAS = [
 
 // ===== ACESSÓRIOS =====
 const ACESSORIOS = [
+  { nome: 'Botas Aladas',             tipo: 'Acessório — Botas',     raridade: 'Raro',    recarga: '—', carga: null, acao: 'Passiva', desc: 'Bota leve de couro com pequenas asas nas laterais. Enquanto usar as botas, seu deslocamento e sua distância de salto aumentam em 6m.' },
   { nome: 'Corredores ao Vento',      tipo: 'Acessório — Botas',     raridade: 'Incomum', recarga: 'Descanso médio+', carga: 2, acao: 'Reação', desc: 'Botas de couro escuro com detalhes prateados. Permitem um segundo salto no ar impulsionado por vento invisível. Útil para evitar quedas, atravessar vãos ou alterar trajetória.' },
   { nome: 'Passos Fantasma',          tipo: 'Acessório — Sapatilhas', raridade: 'Incomum', recarga: 'Descanso médio+', carga: 2, acao: 'Bônus',   desc: 'Sapatilhas etéreas de tecido acinzentado. Concedem +5 em furtividade, eliminam sons ao se deslocar e permitem ignorar terreno difícil.' },
   { nome: 'Laço da Verdade',          tipo: 'Acessório — Laço',      raridade: 'Incomum', recarga: 'Descanso médio+', carga: 2, acao: 'Ação',    desc: 'Laço dourado leve como seda e firme como aço. Lançado sobre criatura a até 6m: se agarrada, fica compelida a dizer apenas verdades até o fim do próximo turno.' },
