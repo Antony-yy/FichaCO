@@ -46,7 +46,7 @@ function calcularPV() {
   const info = CLASSES_PREVIEW[estado.classe];
   const dado = info ? info.dadoVidaNum : 8;
   const vidaAtrib = info ? info.vidaAtributo : 'Vigor';
-  const vigor = calcBonus(estado.constancias[vidaAtrib] || 0);
+  const vigor = calcBonus((estado.constancias[vidaAtrib] || 0) + bonusAcessorioConstancia(vidaAtrib));
   let total = (info ? info.vidaBase : dado) + vigor;
   for (let i = 1; i < estado.nivel; i++) total += Math.floor(Math.random() * dado) + 1 + vigor;
   return total;
@@ -55,9 +55,9 @@ function calcularPV() {
 function calcularPE() {
   const info = CLASSES_PREVIEW[estado.classe];
   const atribs = info ? info.energiaAtributos : ['Sabedoria', 'Vigor'];
-  const energiaInicial = atribs.reduce((s, a) => s + calcBonus(estado.constancias[a] || 0), 0);
+  const energiaInicial = atribs.reduce((s, a) => s + calcBonus((estado.constancias[a] || 0) + bonusAcessorioConstancia(a)), 0);
   const atribNivel = info ? (info.energiaNivelAtributo || atribs[0]) : 'Sabedoria';
-  const bonusNivel = bonusDeClasse() + calcBonus(estado.constancias[atribNivel] || 0);
+  const bonusNivel = bonusDeClasse() + calcBonus((estado.constancias[atribNivel] || 0) + bonusAcessorioConstancia(atribNivel));
   let total = energiaInicial;
   for (let i = 1; i < estado.nivel; i++) total += bonusNivel;
   return Math.max(1, total);
@@ -318,11 +318,11 @@ function _ganhoNivel() {
   const info = CLASSES_PREVIEW[estado.classe];
   if (!info) return;
   const dado      = info.dadoVidaNum || 8;
-  const vigor     = calcBonus(estado.constancias[info.vidaAtributo] || 0);
+  const vigor     = calcBonus((estado.constancias[info.vidaAtributo] || 0) + bonusAcessorioConstancia(info.vidaAtributo));
   const rolado    = Math.floor(Math.random() * dado) + 1;
   const ganhoPV   = rolado + vigor;
   const atribPE   = info.energiaNivelAtributo || (info.energiaAtributos ? info.energiaAtributos[0] : 'Sabedoria');
-  const bonusPE   = bonusDeClasse() + calcBonus(estado.constancias[atribPE] || 0);
+  const bonusPE   = bonusDeClasse() + calcBonus((estado.constancias[atribPE] || 0) + bonusAcessorioConstancia(atribPE));
 
   const pvMaxAtual = parseInt(sessionStorage.getItem('fragmentados_pvmax')) || 1;
   const peMaxAtual = parseInt(sessionStorage.getItem('fragmentados_pemax')) || 1;
@@ -373,7 +373,7 @@ function fichaAlterarAtributo(nome, delta) {
   if (delta < 0 && estado.constancias[nome] <= 0)  return;
   estado.constancias[nome] += delta;
   salvarEstado();
-  const racaBonus = totalBonusRaca(nome);
+  const racaBonus = totalBonusRaca(nome) + bonusAcessorioConstancia(nome);
   const vTotal = estado.constancias[nome] + racaBonus;
   const el = document.getElementById('fa-' + nome);
   if (el) el.textContent = vTotal;
@@ -425,7 +425,7 @@ function atualizarConstanciasFicha() {
     if (!el) return;
     const atrib = map[c];
     const base = atrib ? (estado.constancias[atrib] || 0) : 0;
-    const racaB = atrib ? totalBonusRaca(atrib) : 0;
+    const racaB = atrib ? totalBonusRaca(atrib) + bonusAcessorioConstancia(atrib) : 0;
     const bonusAtrib = calcBonus(base + racaB);
     el.textContent = '+' + (bonusAtrib + bc + (checks[c] || 0));
   });
@@ -445,7 +445,7 @@ function toggleConstCheck(cn, idx) {
     Object.entries(CONSTANCIAS_MAP).forEach(([a, lista]) => lista.forEach(c => map[c] = a));
     const atrib = map[cn];
     const base  = atrib ? (estado.constancias[atrib] || 0) : 0;
-    const racaB = atrib ? totalBonusRaca(atrib) : 0;
+    const racaB = atrib ? totalBonusRaca(atrib) + bonusAcessorioConstancia(atrib) : 0;
     fichaEl.textContent = '+' + (calcBonus(base + racaB) + bonusDeClasse() + novo);
   }
   // atualiza boxes no popup
@@ -460,7 +460,7 @@ function toggleConstCheck(cn, idx) {
     Object.entries(CONSTANCIAS_MAP).forEach(([a, lista]) => lista.forEach(c => map[c] = a));
     const atrib = map[cn];
     const base  = atrib ? (estado.constancias[atrib] || 0) : 0;
-    const racaB = atrib ? totalBonusRaca(atrib) : 0;
+    const racaB = atrib ? totalBonusRaca(atrib) + bonusAcessorioConstancia(atrib) : 0;
     const bonusBase = calcBonus(base + racaB);
     popEl.textContent = '+' + (bonusBase + novo);
   }
@@ -471,6 +471,10 @@ function limparEquip(slot) {
   salvarEstado();
   renderFicha();
   sincronizarPersonagem();
+}
+
+function bonusAcessorioConstancia(nome) {
+  return nome === 'Destreza' && estado.acessorio === 'Anel de Adrenalina' ? 2 : 0;
 }
 
 function abrirPopupEquip(slot) {
@@ -503,7 +507,7 @@ function rolarAtaqueArma() {
   const atributoAbreviado = arma.dano.match(/\+\s*(For|Des)\b/i)?.[1];
   const atributo = atributoAbreviado === 'For' ? 'Força' : atributoAbreviado === 'Des' ? 'Destreza' : null;
   const bonus = atributo
-    ? calcBonus((estado.constancias[atributo] || 0) + totalBonusRaca(atributo))
+    ? calcBonus((estado.constancias[atributo] || 0) + totalBonusRaca(atributo) + bonusAcessorioConstancia(atributo))
     : 0;
   const descricao = `Ataque: ${arma.nome} (${arma.dano})`;
 
@@ -518,7 +522,7 @@ function rolarAtaqueArma() {
   if (danoFixo) {
     const atributoFixo = danoFixo[2] === 'For' ? 'Força' : danoFixo[2] === 'Des' ? 'Destreza' : null;
     const bonusFixo = atributoFixo
-      ? calcBonus((estado.constancias[atributoFixo] || 0) + totalBonusRaca(atributoFixo))
+      ? calcBonus((estado.constancias[atributoFixo] || 0) + totalBonusRaca(atributoFixo) + bonusAcessorioConstancia(atributoFixo))
       : 0;
     rolagemRapida([], Number(danoFixo[1]) + bonusFixo, descricao);
     return;
@@ -829,7 +833,7 @@ function renderFicha() {
     const fixa      = fixas.includes(cn);
     const atribPai  = map[cn];
     const base      = atribPai ? (estado.constancias[atribPai] || 0) : 0;
-    const racaB     = atribPai ? totalBonusRaca(atribPai) : 0;
+    const racaB     = atribPai ? totalBonusRaca(atribPai) + bonusAcessorioConstancia(atribPai) : 0;
     const bonusAtrib = calcBonus(base + racaB);
     const checks    = constChecks[cn] || 0;
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #1a1726;">
@@ -939,7 +943,7 @@ function renderFicha() {
   let aHtml = `<div class="ficha-bloco" id="fichaAtributosBloco"><h4>Atributos</h4>`;
   if (ptLivre > 0) aHtml += `<div id="fichaPontosAviso" style="background:#c9a84c22;border:1px solid #c9a84c55;border-radius:3px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#c9a84c;text-align:center;">✨ Você tem <strong>${ptLivre}</strong> ponto${ptLivre > 1 ? 's' : ''} para distribuir!</div>`;
   Object.entries(estado.constancias).forEach(([k, v]) => {
-    const racaBonus = totalBonusRaca(k);
+    const racaBonus = totalBonusRaca(k) + bonusAcessorioConstancia(k);
     const vTotal   = v + racaBonus;
     const bonus    = calcBonus(vTotal);
     const bonusStr = bonus === 0 ? '—' : '+' + bonus;
@@ -986,7 +990,7 @@ function renderFicha() {
   // --- VITALIDADE ---
   const armaduraObj = ARMADURAS.find(x => x.nome === estado.armadura);
   const caArmadura  = armaduraObj ? parseInt(armaduraObj.dano.replace('CA +','')) || 0 : 0;
-  const caBase      = 10 + calcBonus(estado.constancias['Destreza'] || 0) + caArmadura;
+  const caBase      = 10 + calcBonus((estado.constancias['Destreza'] || 0) + totalBonusRaca('Destreza') + bonusAcessorioConstancia('Destreza')) + caArmadura;
   const pvMax  = parseInt(sessionStorage.getItem('fragmentados_pvmax')) || (() => { const v = calcularPV(); sessionStorage.setItem('fragmentados_pvmax', v); sessionStorage.setItem('fragmentados_pv', v); return v; })();
   const peMax  = parseInt(sessionStorage.getItem('fragmentados_pemax')) || (() => { const v = calcularPE(); sessionStorage.setItem('fragmentados_pemax', v); sessionStorage.setItem('fragmentados_pe', v); return v; })();
   const pvAtual = parseInt(sessionStorage.getItem('fragmentados_pv')) ?? pvMax;
